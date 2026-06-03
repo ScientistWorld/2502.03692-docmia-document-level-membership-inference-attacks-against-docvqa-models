@@ -1,0 +1,50 @@
+{
+  "experiments": {
+    "scaled_whitebox_docmia": {
+      "description": "White-box document-level membership inference on DocVQA-style data. Paper reference is the DocMIA white-box Donut/DocVQA setting from Table 11 and Table 12.",
+      "weight": 1.0,
+      "primary_metric": "f1",
+      "metrics": {
+        "balanced_accuracy": {"higher_is_better": true, "coefficient": 1.0},
+        "accuracy": {"higher_is_better": true, "coefficient": 0.5},
+        "f1": {"higher_is_better": true, "coefficient": 1.0},
+        "tpr_at_1_fpr": {"higher_is_better": true, "coefficient": 0.4},
+        "tpr_at_3_fpr": {"higher_is_better": true, "coefficient": 0.5},
+        "max_questions_per_document": {"higher_is_better": false, "coefficient": -0.1},
+        "uses_auxiliary_data": {"higher_is_better": false, "coefficient": -1.0}
+      },
+      "results": {
+        "score_ua": {
+          "type": "baseline",
+          "balanced_accuracy": 80.5,
+          "accuracy": 80.5,
+          "f1": 81.1,
+          "tpr_at_1_fpr": 5.0,
+          "tpr_at_3_fpr": 11.0,
+          "max_questions_per_document": 10,
+          "uses_auxiliary_data": 0
+        },
+        "gradient_ua": {
+          "type": "baseline",
+          "balanced_accuracy": 77.17,
+          "accuracy": 77.17,
+          "f1": 75.92,
+          "tpr_at_1_fpr": 3.67,
+          "tpr_at_3_fpr": 6.0,
+          "max_questions_per_document": 10,
+          "uses_auxiliary_data": 0
+        },
+        "docmia_fl": {
+          "type": "proposed",
+          "balanced_accuracy": 80.33,
+          "accuracy": 80.33,
+          "f1": 82.18,
+          "tpr_at_1_fpr": 3.33,
+          "tpr_at_3_fpr": 10.67,
+          "max_questions_per_document": 10,
+          "uses_auxiliary_data": 0
+        }
+      }
+    }
+  }
+}

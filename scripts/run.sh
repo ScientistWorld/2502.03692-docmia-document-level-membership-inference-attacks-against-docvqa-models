@@ -13,8 +13,8 @@ set -e
 
 cd /home/user
 
-# Example: train a model
-python method/train.py --epochs 10 --lr 0.001
+export DOCMIA_TARGET_EPOCHS="${DOCMIA_TARGET_EPOCHS:-45}"
+export DOCMIA_MAX_QUESTIONS="${DOCMIA_MAX_QUESTIONS:-4}"
+export DOCMIA_FL_STEPS="${DOCMIA_FL_STEPS:-60}"
 
-# Example: evaluate
-bash scripts/evaluate.sh checkpoints/best.pt
+bash scripts/reproduce.sh

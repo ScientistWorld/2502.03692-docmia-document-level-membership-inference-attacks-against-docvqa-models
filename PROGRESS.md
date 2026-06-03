@@ -2,19 +2,27 @@
 
 ## What Works
 
-<!-- What has been successfully reproduced so far. -->
+- Paper analysis is complete for the main DocMIA white-box algorithm.
+- A scaled document-level DocVQA benchmark has been implemented in `data/`.
+- The target DocVQA model, score baseline, gradient baseline, and DocMIA FL attack are implemented.
+- Evaluation is separated in `eval/` and reads the method output artifact.
+- `python validate.py --reference-only` passes.
 
 ## Results
 
-<!-- Reproduced numbers compared to the paper's reported numbers. -->
+- No reproduced scores yet. The first job will train the scaled target model, run DocMIA FL, and write `scoring/scores.json`.
 
 ## Remaining
 
-<!-- What still needs to be done to reach higher milestones. -->
+- Run the submitted job and inspect `scoring/scores.json`.
+- If FL clearly beats trivial chance and is competitive with the baselines, update to `core_claim`.
+- If results are weak, tune training epochs, FL steps, threshold, or dataset difficulty and resubmit.
+- After the core claim, add FLLoRA or IG as an additional setting if budget remains.
 
 ## Issues
 
-<!-- Blockers, bugs, or difficulties encountered. -->
+- The full paper uses DocVQA/PFL-DocVQA and 200M-1.3B parameter public checkpoints. This scaled reproduction uses a procedural DocVQA-style dataset and a compact target model to fit the benchmark budget while preserving the DocMIA computation.
+- A local smoke test could not run because the login environment lacks Pillow; dependencies are specified in `environment/setup.sh` and will be installed in the compute container overlay.
 
 ## Deviations from Paper
 
@@ -35,3 +43,5 @@
      The test: could someone reading your code identify which algorithm from
      the paper you implemented? If not, you replaced the method. -->
 
+- Paper data/model scale: the original work attacks VT5, Donut, and Pix2Struct on DocVQA/PFL-DocVQA. This reproduction uses a compact DocVQA target model and a procedural document dataset because the full checkpoints and 600-document optimization attacks are too costly for the initial core-claim run.
+- Attack scale: the paper uses up to 10 questions per document and 200 optimization steps. The first job uses 4 questions and 60 FL steps. The procedure is unchanged: per-QA optimization from the target model, L2 distance/steps/utility aggregation, normalization, and KMeans document clustering.

@@ -15,7 +15,11 @@
 
 ## Progress Log
 
-<!-- Write your progress here -->
+### [2026-06-03 00:00] - none
+- Read the paper and identified DocMIA's document-level membership inference protocol.
+- Implemented a scaled DocVQA-style benchmark and the paper's white-box FL optimization-distance attack.
+- Added score-only and one-step-gradient baselines, isolated evaluation code, scripts, and reference scoring targets.
+- Submitted the first compute job to run the full pipeline and determine whether the implementation reaches `method_runs` or `core_claim`.
 
 ## Stop Justification
-- Completed at milestone `none`.
+- Not stopped.

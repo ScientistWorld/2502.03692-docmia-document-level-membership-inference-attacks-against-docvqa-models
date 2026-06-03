@@ -1,17 +1,22 @@
 # Problem Definition
 
-What problem does this paper address? Write this so that someone with no knowledge of the paper can understand what needs to be solved and how success is measured.
-
-Do NOT describe the paper's method or solution here — only the problem itself. Think about if a future scientist agent try to solve this problem from scratch without knowing what approach the paper took. If you leak the solution, you compromise the benchmark.
-
 ## Research Question
 
-<!-- What problem or challenge does this paper tackle? What gap in existing work does it address? -->
+Given a trained document visual question answering model, a target document,
+and multiple question-answer pairs about that document, decide whether the
+document was included in the model's training set. The membership decision is
+document-level: all questions attached to the same document must be combined
+into a single in/out prediction.
 
 ## Why It Matters
 
-<!-- Why is this problem important? What would a good solution enable? Make it short -->
+Documents often contain sensitive personal, financial, or organizational data.
+If a deployed document QA model leaks whether a specific document was used for
+training, it exposes privacy risk even when the model only returns answers.
 
 ## Success Criteria
 
-<!-- What would a successful solution look like? What properties should it have? This is about the goal, not the paper's specific approach. Make it short -->
+A successful system identifies member and non-member documents better than
+chance on balanced member/non-member sets, works without auxiliary shadow
+datasets, and remains effective when the model's normal question-answer utility
+alone is not enough to separate the two classes.

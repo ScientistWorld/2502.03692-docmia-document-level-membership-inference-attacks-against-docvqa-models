@@ -26,5 +26,5 @@ cd /home/user
 
 mkdir -p scoring
 
-# TODO: implement evaluation using code in eval/
-# Must write scoring/scores.json at the end
+INPUT="${1:-checkpoints/docmia_outputs.json}"
+python eval/evaluate_docmia.py --input "$INPUT" --scores scoring/scores.json

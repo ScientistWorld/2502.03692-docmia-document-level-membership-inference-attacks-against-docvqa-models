@@ -16,4 +16,8 @@
 
 set -e
 
-# uv pip install --system <packages>
+uv pip install --system \
+  numpy \
+  pillow \
+  scikit-learn
+uv pip install --system torch --index-url https://download.pytorch.org/whl/cpu

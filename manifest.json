@@ -1,0 +1,127 @@
+{
+  "paper": {
+    "arxiv_id": "2502.03692",
+    "title": "DocMIA: Document-Level Membership Inference Attacks against DocVQA Models",
+    "date": "",
+    "topics": [
+      "paper-type-metric-method",
+      "domain-ai-ml",
+      "area-multimodal-models",
+      "category-security",
+      "method-membership-inference-attack",
+      "secondary-domain-ai-ml",
+      "secondary-area-vision-language",
+      "secondary-category-privacy",
+      "secondary-method-optimization-based-attack",
+      "selection-category-safety-security"
+    ]
+  },
+  "reproduction": {
+    "milestone": "none",
+    "status": "error",
+    "error": "rc=-1: This content was flagged for possible cybersecurity risk. If this seems wrong, try rephrasing your request. To get authorized for security work, join the Trusted Access for Cyber program: https://chatgpt.com/cyber",
+    "scaffold": "codex",
+    "model": "gpt-5.5",
+    "profile": "gpt-5.5-medium",
+    "effort": "medium",
+    "gpu_hours_used": 0.0,
+    "current_iteration_gpu_budget": 30,
+    "current_iteration_gpu_hours_used": 0.0,
+    "total_gpu_hours_used": 0.0,
+    "current_iteration_cpu_hours_used": 0.004,
+    "total_cpu_hours_used": 0.004,
+    "gpu_budget": 30,
+    "duration_sec": 730.5,
+    "cost_usd": null,
+    "input_tokens": 2040751,
+    "output_tokens": 19792,
+    "cached_input_tokens": 1844224,
+    "cache_creation_tokens": null,
+    "reasoning_tokens": 0,
+    "total_input_tokens": 2040751,
+    "num_turns": 36,
+    "duration_api_ms": null,
+    "num_runs": 1,
+    "iteration_count": 0,
+    "workflow": "standard",
+    "workflow_step": 0,
+    "total_gpu_jobs": 1,
+    "time_breakdown": {
+      "working": 574.2488234043121,
+      "building": 0.09019351005554199,
+      "installing": 122.16821551322937,
+      "waiting": 17.57209348678589
+    }
+  },
+  "agents": [
+    {
+      "scaffold": "codex",
+      "model": "gpt-5.5",
+      "profile": "gpt-5.5-medium",
+      "effort": "medium",
+      "role": "reproducer",
+      "is_iteration": false,
+      "iteration": 1,
+      "workflow": "standard",
+      "workflow_step": 0,
+      "started_at": 1780450858.3959005,
+      "finished_at": 1780451588.87265,
+      "duration_sec": 730.5,
+      "blocked_sec": 0.0,
+      "status": "error",
+      "error": "rc=-1: This content was flagged for possible cybersecurity risk. If this seems wrong, try rephrasing your request. To get authorized for security work, join the Trusted Access for Cyber program: https://chatgpt.com/cyber",
+      "milestone": "none",
+      "gpu_budget": 30,
+      "gpu_hours_used": 0.0,
+      "total_gpu_hours_used": 0.0,
+      "cpu_hours_used": 0.004,
+      "time_breakdown": {
+        "working": 574.2488234043121,
+        "building": 0.09019351005554199,
+        "installing": 122.16821551322937,
+        "waiting": 17.57209348678589
+      },
+      "cost_usd": null,
+      "input_tokens": 2040751,
+      "output_tokens": 19792,
+      "cached_input_tokens": 1844224,
+      "cache_creation_tokens": null,
+      "reasoning_tokens": 0,
+      "total_input_tokens": 2040751,
+      "num_turns": 36,
+      "duration_api_ms": null,
+      "tool_uses": {
+        "shell": 30,
+        "file_edit": 6
+      },
+      "gpu_jobs": [
+        {
+          "run_id": "b610cdf5-51d",
+          "command": "bash /home/user/scripts/run.sh",
+          "num_gpus": 0,
+          "num_cpus": 1,
+          "resource": "gpu-cpu",
+          "hive_job_id": "fe49bef8",
+          "status": "failed",
+          "returncode": 1,
+          "duration_sec": 14.4,
+          "submitted_at": 1780451561.2500994,
+          "started_at": 1780451562.969722,
+          "completed_at": 1780451577.4024851
+        }
+      ],
+      "progress_log": "### [2026-06-03 00:00] - none\n- Read the paper and identified DocMIA's document-level membership inference protocol.\n- Implemented a scaled DocVQA-style benchmark and the paper's white-box FL optimization-distance attack.\n- Added score-only and one-step-gradient baselines, isolated evaluation code, scripts, and reference scoring targets.\n- Submitted the first compute job to run the full pipeline and determine whether the implementation reaches `method_runs` or `core_claim`."
+    }
+  ],
+  "components": {
+    "has_container": true,
+    "has_method_code": true,
+    "has_evaluation": true,
+    "has_download_script": true,
+    "has_reproduce_script": true,
+    "has_method_script": true,
+    "has_baseline": true,
+    "has_reference": true,
+    "has_data": true
+  }
+}

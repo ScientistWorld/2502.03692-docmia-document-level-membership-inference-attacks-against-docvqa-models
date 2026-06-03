@@ -22,4 +22,4 @@
 - Submitted the first compute job to run the full pipeline and determine whether the implementation reaches `method_runs` or `core_claim`.
 
 ## Stop Justification
-- Not stopped.
+- Completed at milestone `none`.

@@ -19,4 +19,5 @@ export DOCMIA_MAX_QUESTIONS="${DOCMIA_MAX_QUESTIONS:-4}"
 export DOCMIA_FL_STEPS="${DOCMIA_FL_STEPS:-60}"
 export DOCMIA_IG_STEPS="${DOCMIA_IG_STEPS:-60}"
 
-bash scripts/reproduce.sh
+bash scripts/evaluate.sh checkpoints/docmia_outputs.json
+python validate.py --compare

@@ -12,14 +12,23 @@
 # Estimated total download size: 0 GB
 # Estimated disk usage after extraction: <1 MB
 #
-# This reproduction has no external downloads; the command below creates the
-# small procedural dataset under data/.
+# This reproduction has no external downloads. The small procedural dataset is
+# tracked under data/ so a fresh clone works before Python packages are
+# installed; if it is missing, regenerate it with the same first-party script.
 
-set -e
+set -euo pipefail
 
 cd /home/user
 export PYTHONPATH=/home/user:${PYTHONPATH:-}
 
-# The scaled reproduction uses a procedural DocVQA-style dataset so it is
-# portable and does not require gated document downloads.
+DATA_DIR="data/synthetic_docvqa"
+MANIFEST="$DATA_DIR/manifest.json"
+
+if [ -f "$MANIFEST" ] && \
+   [ -f "$DATA_DIR/images/member_0000.png" ] && \
+   [ -f "$DATA_DIR/images/nonmember_0000.png" ]; then
+  echo "Synthetic DocVQA dataset is present at $DATA_DIR"
+  exit 0
+fi
+
 python data/synthetic_docvqa.py

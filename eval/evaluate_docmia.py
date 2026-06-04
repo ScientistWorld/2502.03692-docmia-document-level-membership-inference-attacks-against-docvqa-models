@@ -29,6 +29,16 @@ def _labels_from_manifest(data_dir: Path, doc_ids: list[str]) -> np.ndarray:
     return np.asarray([1 if split_by_id[doc_id] == "member" else 0 for doc_id in doc_ids], dtype=np.int64)
 
 
+def _default_doc_ids_from_manifest(data_dir: Path) -> list[str]:
+    """Legacy artifact fallback matching the dataset generator's document order."""
+    manifest = json.loads((data_dir / "manifest.json").read_text(encoding="utf-8"))
+    return [
+        doc["doc_id"]
+        for doc in manifest["documents"]
+        if doc["split"] in {"member", "nonmember"}
+    ]
+
+
 def _normalize(features: np.ndarray) -> np.ndarray:
     mean = features.mean(axis=0, keepdims=True)
     std = features.std(axis=0, keepdims=True)
@@ -62,7 +72,10 @@ def _metrics(labels: np.ndarray, preds: np.ndarray, scores: np.ndarray) -> dict[
 def _recompute_results(payload: dict, data_dir: Path) -> dict[str, dict[str, float]]:
     features = payload["features"]
     metadata = payload.get("metadata", {})
-    labels = _labels_from_manifest(data_dir, features["doc_ids"])
+    doc_ids = features.get("doc_ids")
+    if doc_ids is None:
+        doc_ids = _default_doc_ids_from_manifest(data_dir)
+    labels = _labels_from_manifest(data_dir, doc_ids)
     feature_keys = {
         "score_ua": "score_ua",
         "gradient_ua": "gradient_ua",
@@ -76,6 +89,11 @@ def _recompute_results(payload: dict, data_dir: Path) -> dict[str, dict[str, flo
         if feature_key not in features:
             continue
         feature_array = np.asarray(features[feature_key], dtype=np.float64)
+        if feature_array.shape[0] != labels.shape[0]:
+            raise ValueError(
+                f"{method_name} has {feature_array.shape[0]} rows, but "
+                f"{len(labels)} document labels were found"
+            )
         preds, scores = _cluster_predict(
             feature_array,
             member_is_low=MEMBER_IS_LOW_SIGNAL[method_name],

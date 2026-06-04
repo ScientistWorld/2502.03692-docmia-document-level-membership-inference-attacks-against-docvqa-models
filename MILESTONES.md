@@ -16,5 +16,9 @@
 - Added the missing FLLoRA white-box variant to the method and scoring contract.
 - Prepared a new end-to-end job to regenerate method outputs and evaluate FLLoRA from raw features.
 
+### [2026-06-04 23:02] - core_claim_plus
+- Audited the continuation workspace and confirmed the existing FL, IG, score, and gradient implementations preserve the paper's DocMIA computation at scaled size.
+- Hardened `eval/` so standalone scoring works for both fresh `doc_ids` artifacts and older artifacts that follow manifest document order.
+
 ## Stop Justification
 - Not stopped. A follow-up job is being submitted to validate the FLLoRA expansion.

@@ -12,6 +12,10 @@
 - Job `73b730b0-831` verified the hardened evaluator in the compute container:
   `eval/` now recomputes metrics from raw feature arrays and labels instead of
   copying method-reported metrics.
+- Continuation audit on 2026-06-04 found the local default artifact was from an
+  older schema without `doc_ids`. `eval/` now handles both fresh `doc_ids`
+  artifacts and legacy artifacts by deriving labels from the manifest, with
+  explicit row-count validation.
 - Package import handling has been fixed for the compute container by exporting
   `PYTHONPATH=/home/user` in all run scripts and adding package markers.
 
@@ -83,6 +87,10 @@
 - FLLoRA was added after the last successful scoring job. The current
   `scoring/scores.json` will not include `docmia_fllora` until the submitted
   regeneration job finishes.
+- The login-node Python still lacks `numpy`, so `scripts/evaluate.sh` cannot be
+  run locally outside the packaged environment. The evaluator syntax check
+  passes locally, and the next CPU container job runs the standalone evaluator
+  after regenerating the full artifact.
 
 ## Deviations from Paper
 

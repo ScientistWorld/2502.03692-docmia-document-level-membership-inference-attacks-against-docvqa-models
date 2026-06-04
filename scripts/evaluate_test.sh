@@ -9,6 +9,9 @@ export PYTHONPATH=/home/user:${PYTHONPATH:-}
 mkdir -p scoring
 
 INPUT="${1:-checkpoints/docmia_outputs.json}"
+if [ -d "$INPUT" ]; then
+  INPUT="$INPUT/docmia_outputs.json"
+fi
 DATA_DIR="${2:-data/synthetic_docvqa}"
 python eval/test/evaluate_docmia_slice.py \
   --input "$INPUT" \

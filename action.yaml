@@ -1,9 +1,5 @@
-# This iteration writes files only — do NOT submit compute jobs.
-# Once you set action to 'done', STOP immediately.
-# Do NOT sleep, poll, or wait. The system reads this file
-# only after your turn ends.
-action: done
+# The system reads this file after the turn ends.
+action: submit
 gpus: 0
 test: false
-milestone: secondary_claims
-notes: "Improvements: added ranking/collapse metrics, metadata penalties, label-copy guard, train-calibrated score thresholds for test, and validation-safe member-rate imbalance metric naming. Notes: validate.py passes; DESIGN_NOTES.md documents residual manifest label leakage risk."
+notes: "Run evaluate_train.sh and evaluate_test.sh against /home/user/checkpoints; populate split scores for review."

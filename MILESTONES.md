@@ -17,4 +17,3 @@
 
 ## Stop Justification
 - Completed at milestone `core_claim_plus`.
-- Further expansion to full DocVQA/PFL-DocVQA with VT5, Donut, and Pix2Struct is outside the remaining practical budget for this reproduction, but the environment is packaged and reusable for the central white-box claim.

@@ -17,6 +17,7 @@
 set -e
 
 cd /home/user
+export PYTHONPATH=/home/user:${PYTHONPATH:-}
 
 bash scripts/download.sh
 bash scripts/method.sh

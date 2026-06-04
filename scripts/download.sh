@@ -18,6 +18,7 @@
 set -e
 
 cd /home/user
+export PYTHONPATH=/home/user:${PYTHONPATH:-}
 
 # The scaled reproduction uses a procedural DocVQA-style dataset so it is
 # portable and does not require gated document downloads.

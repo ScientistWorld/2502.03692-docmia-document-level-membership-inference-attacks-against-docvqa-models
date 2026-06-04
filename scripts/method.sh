@@ -9,6 +9,7 @@
 set -e
 
 cd /home/user
+export PYTHONPATH=/home/user:${PYTHONPATH:-}
 
 python data/synthetic_docvqa.py
 python method/train_target.py \

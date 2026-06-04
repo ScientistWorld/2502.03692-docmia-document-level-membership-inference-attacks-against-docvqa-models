@@ -21,5 +21,10 @@
 - Added score-only and one-step-gradient baselines, isolated evaluation code, scripts, and reference scoring targets.
 - Submitted the first compute job to run the full pipeline and determine whether the implementation reaches `method_runs` or `core_claim`.
 
+### [2026-06-04 21:55] - none
+- Inspected failed job `b610cdf5-51d`; it failed before method execution due to missing workspace-root import path in the container.
+- Added package markers and exported `PYTHONPATH=/home/user` in all scripts.
+- `python validate.py --reference-only` passes; resubmitting the full scaled DocMIA run.
+
 ## Stop Justification
 - Completed at milestone `none`.

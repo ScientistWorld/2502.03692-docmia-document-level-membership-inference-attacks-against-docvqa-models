@@ -16,6 +16,7 @@
 set -e
 
 cd /home/user
+export PYTHONPATH=/home/user:${PYTHONPATH:-}
 
 python data/synthetic_docvqa.py
 if [ ! -e checkpoints/tiny_docvqa_target.pt ]; then

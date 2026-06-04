@@ -1,5 +1,5 @@
-action: done
+action: submit
 gpus: 0
-test: false
+test: true
 milestone: secondary_claims
-notes: "Final sanity pass complete: validate.py --compare, py_compile, and shell syntax checks passed; scaled DocMIA gym remains at secondary_claims."
+notes: "CPU test job to verify scripts/run.sh now regenerates the checkpoint and DocMIA outputs from scratch before evaluation."

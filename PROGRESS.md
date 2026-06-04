@@ -28,6 +28,9 @@
 - Final local sanity pass on 2026-06-04 confirmed `python validate.py
   --compare`, Python compilation, and shell-script syntax all pass without
   changing the method artifacts.
+- `scripts/run.sh` now regenerates the scaled target checkpoint and DocMIA
+  output artifact instead of requiring ignored `checkpoints/` files from an
+  earlier run.
 
 ## Results
 
@@ -120,6 +123,8 @@
 - The root worktree contains pre-existing special-device entries for
   `README.md` and `manifest.json`; `git diff --stat` cannot hash them. They are
   unrelated to the reproduction code and were left untouched.
+- A final CPU test job has been prepared to verify the fresh-artifact
+  `scripts/run.sh` path inside the packaged environment.
 
 ## Deviations from Paper
 

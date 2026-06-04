@@ -2,8 +2,8 @@
 # Once you set action to 'done', STOP immediately.
 # Do NOT sleep, poll, or wait. The system reads this file
 # only after your turn ends.
-action: pending
+action: done
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: ""
+notes: "Balanced non-exhaustive document split: 80 train and 80 test documents, each 40 member/40 nonmember, with 32 unused buffer documents; existing 7 metrics scored on both slices; scripts written, scores produced later."

@@ -25,7 +25,4 @@
 - `scoring/scores.json` now contains score, gradient, FL, FLLoRA, and IG results from the independent evaluator, and `python validate.py --compare` passed in the compute container.
 
 ## Stop Justification
-- Stopping at `secondary_claims`: the scaled environment reproduces the core
-  DocMIA white-box claim and validates the additional FLLoRA/IG variants.
-  Higher milestones would require full-size DocVQA/PFL-DocVQA checkpoints and
-  broader paper-table coverage beyond the available budget.
+- Completed at milestone `secondary_claims`.

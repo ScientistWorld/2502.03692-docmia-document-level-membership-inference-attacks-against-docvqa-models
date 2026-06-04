@@ -1,6 +1,6 @@
 # Reproduction Milestones
 
-**Current: core_claim_plus**
+**Current: secondary_claims**
 
 ## Progress Log
 
@@ -20,5 +20,12 @@
 - Audited the continuation workspace and confirmed the existing FL, IG, score, and gradient implementations preserve the paper's DocMIA computation at scaled size.
 - Hardened `eval/` so standalone scoring works for both fresh `doc_ids` artifacts and older artifacts that follow manifest document order.
 
+### [2026-06-04 23:11] - secondary_claims
+- Compute job `f60d7a61-e05` regenerated the full scaled DocMIA artifact with FLLoRA included.
+- `scoring/scores.json` now contains score, gradient, FL, FLLoRA, and IG results from the independent evaluator, and `python validate.py --compare` passed in the compute container.
+
 ## Stop Justification
-- Not stopped. A follow-up job is being submitted to validate the FLLoRA expansion.
+- Stopping at `secondary_claims`: the scaled environment reproduces the core
+  DocMIA white-box claim and validates the additional FLLoRA/IG variants.
+  Higher milestones would require full-size DocVQA/PFL-DocVQA checkpoints and
+  broader paper-table coverage beyond the available budget.

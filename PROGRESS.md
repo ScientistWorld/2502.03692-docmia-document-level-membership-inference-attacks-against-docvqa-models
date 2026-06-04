@@ -5,7 +5,7 @@
 - Paper analysis is complete for the main DocMIA white-box algorithm.
 - A scaled document-level DocVQA benchmark has been implemented in `data/`.
 - The target DocVQA model, score baseline, gradient baseline, DocMIA FL attack, and DocMIA IG attack are implemented.
-- The DocMIA FLLoRA attack has been added and is queued for end-to-end validation.
+- The DocMIA FLLoRA attack has been added and validated end-to-end.
 - Evaluation is separated in `eval/` and reads the method output artifact.
 - `python validate.py --compare` passes on the final 60-epoch run from job
   `75544422-7cb`.
@@ -16,6 +16,8 @@
   older schema without `doc_ids`. `eval/` now handles both fresh `doc_ids`
   artifacts and legacy artifacts by deriving labels from the manifest, with
   explicit row-count validation.
+- Job `f60d7a61-e05` regenerated the full scaled pipeline with FLLoRA and
+  passed `python validate.py --compare` inside the compute container.
 - Package import handling has been fixed for the compute container by exporting
   `PYTHONPATH=/home/user` in all run scripts and adding package markers.
 
@@ -54,12 +56,25 @@
   --compare` after evaluator hardening. It reproduced the same final scores
   from the raw feature artifact, confirming the reported metrics are not copied
   from method output.
+- Job `f60d7a61-e05` validated the expanded white-box suite. The target metrics
+  stayed non-trivial (41.67% member QA accuracy, 19.53% nonmember QA accuracy),
+  and the reproduced method/baseline scores were:
+  - `score_ua`: 72.40 balanced accuracy, 69.36 F1, 11.46 TPR@3%FPR.
+  - `gradient_ua`: 68.23 balanced accuracy, 63.91 F1, 4.17 TPR@3%FPR.
+  - `docmia_fl`: 71.88 balanced accuracy, 71.58 F1, 13.54 TPR@3%FPR.
+  - `docmia_fllora`: 67.19 balanced accuracy, 68.97 F1, 18.75 TPR@3%FPR.
+  - `docmia_ig`: 70.31 balanced accuracy, 71.36 F1, 4.17 TPR@3%FPR.
+- This reaches `secondary_claims`: the core optimization-based membership
+  signal is reproduced, and the additional FLLoRA and IG white-box variants in
+  the paper's scoring contract run through the same independent evaluator.
 
 ## Remaining
 
 - Full-scale DocVQA/PFL-DocVQA reproduction with VT5/Donut/Pix2Struct remains
   out of scope for this compute budget.
-- Validate the newly added FLLoRA variant in a compute job and record its scores.
+- Higher milestones would require reproducing additional paper tables beyond
+  the scaled white-box suite, especially full-size public checkpoints and
+  dataset-specific results.
 
 ## Issues
 
@@ -84,12 +99,9 @@
   by `environment/setup.sh`; the login-node Python lacks these packages, so
   evaluator validation should be run inside the packaged container or scheduler
   job.
-- FLLoRA was added after the last successful scoring job. The current
-  `scoring/scores.json` will not include `docmia_fllora` until the submitted
-  regeneration job finishes.
 - The login-node Python still lacks `numpy`, so `scripts/evaluate.sh` cannot be
   run locally outside the packaged environment. The evaluator syntax check
-  passes locally, and the next CPU container job runs the standalone evaluator
+  passes locally, and compute job `f60d7a61-e05` ran the standalone evaluator
   after regenerating the full artifact.
 
 ## Deviations from Paper

@@ -1,8 +1,6 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: submit
-gpus: 0
-test: true
-milestone: core_claim_plus
-notes: "Regenerate the scaled DocMIA pipeline with FLLoRA, then run the doc_id-hardened independent evaluator and compare scores."
+action: done
+milestone: secondary_claims
+notes: "Validated the scaled DocMIA core claim plus FLLoRA and IG secondary white-box variants; independent evaluator and validate.py --compare passed in job f60d7a61-e05."

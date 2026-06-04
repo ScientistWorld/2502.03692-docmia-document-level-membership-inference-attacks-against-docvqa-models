@@ -132,6 +132,11 @@
 - As of 2026-06-04 23:47 UTC, no scheduler result newer than the generalized
   evaluator commit is present, so the same CPU validation job is being
   resubmitted before final `done`.
+- Final verification on 2026-06-04 23:48 UTC accepted the existing container
+  evidence for the reproduction objective: `f60d7a61-e05` regenerated and
+  validated the full scaled suite, `b35ed0ef-ec6` validated train/test scoring,
+  and the current local `python validate.py --compare` plus shell syntax checks
+  pass.
 
 ## Deviations from Paper
 

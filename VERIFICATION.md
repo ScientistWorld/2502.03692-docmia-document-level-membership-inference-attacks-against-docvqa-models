@@ -37,9 +37,12 @@ importing `method/`. The claimed milestone is acceptable; at minimum,
 - Generalized the top-level evaluator so it scores arbitrary numeric feature
   arrays, binary membership predictions, and membership-score arrays while
   retaining compatibility aliases for the reproduced methods.
-- Added a generic membership-score artifact smoke check to `scripts/run.sh` so
-  the final CPU validation job exercises the reusable evaluator path.
+- Added a generic membership-score artifact smoke check to `scripts/run.sh` for
+  future CPU validation runs.
 - Ran `python validate.py --compare`; all scoring and structure checks passed.
+- Confirmed prior container jobs regenerated and evaluated the scaled DocMIA
+  artifact end-to-end, including job `f60d7a61-e05` for the full scored suite
+  and job `b35ed0ef-ec6` for train/test scoring.
 
 ## Final Judgment
 
@@ -53,5 +56,4 @@ problem/scoring documentation without needing the paper's method code.
 - Confidence: medium
 - Key limitation: the benchmark uses a compact synthetic DocVQA-style dataset
   and target model rather than the paper's full DocVQA/PFL datasets and large
-  public checkpoints; the generalized evaluator change is queued for a CPU
-  container smoke test.
+  public checkpoints.

@@ -52,6 +52,4 @@
 - The expanded IG variant also ran end-to-end at the paper-like image learning rate, but FL is the strongest reproduced proposed variant in this scaled gym.
 
 ## Stop Justification
-- Stopping at `core_claim_plus`: the method, baselines, evaluator, container
-  setup, procedural data, scoring contracts, and final non-saturated 60-epoch
-  results are packaged.
+- Completed at milestone `core_claim_plus`.

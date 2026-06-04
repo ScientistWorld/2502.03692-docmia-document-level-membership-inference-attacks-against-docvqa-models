@@ -1,5 +1,5 @@
-action: submit
+action: done
 gpus: 0
 test: false
 milestone: core_claim
-notes: "Regenerate the 60-epoch scaled DocMIA method artifact, run independent full evaluation and validate.py --compare, then refresh train/test split scores."
+notes: "Made download.sh fresh-clone safe for the tracked synthetic dataset and verified packaging paths."

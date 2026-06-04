@@ -13,7 +13,7 @@
 ## Changes made
 
 - Added threshold-free ranking metrics (`roc_auc`, `average_precision`) and a collapse-resistant classification metric (`matthews_corrcoef`) to both slice evaluators.
-- Added `positive_rate_deviation` so a method cannot inflate F1 by drifting too far from the balanced member/nonmember prior.
+- Added `predicted_member_rate_imbalance` so a method cannot inflate F1 by drifting too far from the balanced member/nonmember prior.
 - Changed missing constraint metadata from an accidental reward to a penalty: missing `max_questions_per_document` now scores as a very large budget, missing `uses_auxiliary_data` scores as auxiliary use, and `constraint_metadata_missing` is emitted.
 - Added `label_copy_suspect`, a guard that penalizes raw binary method outputs or feature columns that directly copy the known member/nonmember labels across the source artifact.
 - For score-only methods, `eval/train/` now records the visible-slice threshold in train-score calibration metadata; `eval/test/` reuses that threshold when available instead of adapting a median threshold on the held-out slice.

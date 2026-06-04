@@ -137,7 +137,7 @@ def _metrics(labels: np.ndarray, preds: np.ndarray, scores: np.ndarray) -> dict[
         "average_precision": _safe_average_precision(labels, scores),
         "tpr_at_1_fpr": float(np.interp(0.01, fpr, tpr) * 100.0),
         "tpr_at_3_fpr": float(np.interp(0.03, fpr, tpr) * 100.0),
-        "positive_rate_deviation": float(abs(preds.mean() - labels.mean()) * 100.0),
+        "predicted_member_rate_imbalance": float(abs(preds.mean() - labels.mean()) * 100.0),
     }
 
 

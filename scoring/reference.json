@@ -13,7 +13,7 @@
         "average_precision": {"higher_is_better": true, "coefficient": 0.5, "description": "Precision-recall ranking quality for member documents."},
         "tpr_at_1_fpr": {"higher_is_better": true, "coefficient": 0.4, "description": "Member-document true positive rate at 1 percent false positive rate."},
         "tpr_at_3_fpr": {"higher_is_better": true, "coefficient": 0.5, "description": "Member-document true positive rate at 3 percent false positive rate."},
-        "positive_rate_deviation": {"higher_is_better": false, "coefficient": -0.3, "description": "Absolute deviation between the predicted member rate and the balanced evaluation prior."},
+        "predicted_member_rate_imbalance": {"higher_is_better": false, "coefficient": -0.3, "description": "Absolute distance between the predicted member rate and the balanced evaluation prior."},
         "max_questions_per_document": {"higher_is_better": false, "coefficient": -0.1, "description": "Declared maximum number of document questions consumed by the attack."},
         "uses_auxiliary_data": {"higher_is_better": false, "coefficient": -1.0, "description": "Penalty flag for methods that use auxiliary or shadow data."},
         "constraint_metadata_missing": {"higher_is_better": false, "coefficient": -1.0, "description": "Penalty flag when required query-budget or auxiliary-data metadata is absent."},

@@ -1,5 +1,5 @@
-action: done
+action: submit
 gpus: 0
-test: false
-milestone: core_claim
-notes: "Made download.sh fresh-clone safe for the tracked synthetic dataset and verified packaging paths."
+test: true
+milestone: secondary_claims
+notes: "CPU validation job: regenerate scores from the existing DocMIA artifact with the expanded evaluator metrics, run train/test slice scoring, and validate the package."

@@ -25,4 +25,5 @@
 - `scoring/scores.json` now contains score, gradient, FL, FLLoRA, and IG results from the independent evaluator, and `python validate.py --compare` passed in the compute container.
 
 ## Stop Justification
-- Completed at milestone `core_claim`.
+- Completed at milestone `secondary_claims` after validating the scaled
+  white-box FL, FLLoRA, and IG variants with independent scoring.

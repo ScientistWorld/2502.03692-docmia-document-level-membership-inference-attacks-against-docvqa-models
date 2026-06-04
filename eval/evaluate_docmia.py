@@ -8,7 +8,15 @@ from pathlib import Path
 
 import numpy as np
 from sklearn.cluster import KMeans
-from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score, roc_curve
+from sklearn.metrics import (
+    accuracy_score,
+    average_precision_score,
+    balanced_accuracy_score,
+    f1_score,
+    matthews_corrcoef,
+    roc_auc_score,
+    roc_curve,
+)
 
 
 MEMBER_IS_LOW_SIGNAL = {
@@ -58,15 +66,59 @@ def _cluster_predict(features: np.ndarray, member_is_low: bool) -> tuple[np.ndar
     return preds, scores
 
 
+def _safe_roc_auc(labels: np.ndarray, scores: np.ndarray) -> float:
+    try:
+        return float(roc_auc_score(labels, scores) * 100.0)
+    except ValueError:
+        return 50.0
+
+
+def _safe_average_precision(labels: np.ndarray, scores: np.ndarray) -> float:
+    try:
+        return float(average_precision_score(labels, scores) * 100.0)
+    except ValueError:
+        return float(labels.mean() * 100.0)
+
+
 def _metrics(labels: np.ndarray, preds: np.ndarray, scores: np.ndarray) -> dict[str, float]:
     fpr, tpr, _ = roc_curve(labels, scores)
     return {
         "balanced_accuracy": float(balanced_accuracy_score(labels, preds) * 100.0),
         "accuracy": float(accuracy_score(labels, preds) * 100.0),
-        "f1": float(f1_score(labels, preds) * 100.0),
+        "f1": float(f1_score(labels, preds, zero_division=0) * 100.0),
+        "matthews_corrcoef": float(matthews_corrcoef(labels, preds) * 100.0),
+        "roc_auc": _safe_roc_auc(labels, scores),
+        "average_precision": _safe_average_precision(labels, scores),
         "tpr_at_1_fpr": float(np.interp(0.01, fpr, tpr) * 100.0),
         "tpr_at_3_fpr": float(np.interp(0.03, fpr, tpr) * 100.0),
+        "predicted_member_rate_imbalance": float(abs(preds.mean() - labels.mean()) * 100.0),
     }
+
+
+def _metadata_metrics(metadata: dict) -> dict[str, float]:
+    has_question_budget = "max_questions_per_document" in metadata
+    has_auxiliary_flag = "uses_auxiliary_data" in metadata
+    return {
+        "max_questions_per_document": float(metadata.get("max_questions_per_document", 1_000_000.0)),
+        "uses_auxiliary_data": float(metadata.get("uses_auxiliary_data", 1.0)),
+        "constraint_metadata_missing": float(not (has_question_budget and has_auxiliary_flag)),
+    }
+
+
+def _label_copy_suspect(values: np.ndarray, labels: np.ndarray) -> float:
+    arr = np.asarray(values, dtype=np.float64)
+    if arr.ndim == 1:
+        arr = arr[:, None]
+    if arr.shape[0] != labels.shape[0]:
+        return 0.0
+    for col in range(arr.shape[1]):
+        column = arr[:, col]
+        if np.unique(column).size > 2:
+            continue
+        binary = (column >= 0.5).astype(np.int64)
+        if np.array_equal(binary, labels) or np.array_equal(1 - binary, labels):
+            return 1.0
+    return 0.0
 
 
 def _recompute_results(payload: dict, data_dir: Path) -> dict[str, dict[str, float]]:
@@ -99,8 +151,8 @@ def _recompute_results(payload: dict, data_dir: Path) -> dict[str, dict[str, flo
             member_is_low=MEMBER_IS_LOW_SIGNAL[method_name],
         )
         result = _metrics(labels, preds, scores)
-        result["max_questions_per_document"] = float(metadata.get("max_questions_per_document", 0.0))
-        result["uses_auxiliary_data"] = float(metadata.get("uses_auxiliary_data", 0.0))
+        result.update(_metadata_metrics(metadata))
+        result["label_copy_suspect"] = _label_copy_suspect(feature_array, labels)
         results[method_name] = result
     return results
 

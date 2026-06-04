@@ -20,6 +20,11 @@
   passed `python validate.py --compare` inside the compute container.
 - Package import handling has been fixed for the compute container by exporting
   `PYTHONPATH=/home/user` in all run scripts and adding package markers.
+- The default evaluator now reports all metrics declared in
+  `scoring/reference.json`, including ranking quality, prediction-balance,
+  metadata, and label-copy guard metrics. A CPU validation job is queued to
+  regenerate `scoring/scores.json` from the existing method artifact inside the
+  packaged environment.
 
 ## Results
 
@@ -103,6 +108,10 @@
   run locally outside the packaged environment. The evaluator syntax check
   passes locally, and compute job `f60d7a61-e05` ran the standalone evaluator
   after regenerating the full artifact.
+- On 2026-06-04, a local rerun of `scripts/evaluate.sh` again failed on the
+  login-node Python with `ModuleNotFoundError: No module named 'numpy'`; the
+  run script has been switched to a CPU container validation job for the
+  evaluator update.
 
 ## Deviations from Paper
 

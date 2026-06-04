@@ -20,15 +20,21 @@
 - Job `c775731d-164` added IG to the same run. FL stayed at 66.04 F1, but
   `docmia_ig` reached only 49.33 F1 and 0.00 TPR@3%FPR with image learning
   rate 0.01.
+- Job `a5f98ef0-266` used a longer 160-epoch target run and IG learning rate
+  0.001. It produced strong attack scores (`docmia_ig`: 96.48 F1, 98.96
+  TPR@3%FPR), but the target memorized member documents completely and the
+  score/gradient baselines were also near-saturated. This is useful as a
+  sanity check for the implemented IG attack, but it is not a stronger
+  milestone because the benchmark condition became too easy.
 
 ## Remaining
 
-- Rerun the expanded job with the paper-like IG learning rate 0.001 and longer
-  target training.
-- If IG remains weak, keep FL as the reproduced core claim and document IG as an
-  unsuccessful secondary variant on this scaled target.
-- If target accuracy remains low after longer training, redesign the synthetic
-  visual encoding in a later run rather than claiming additional milestones.
+- Rerun the expanded job at an intermediate 90-epoch target setting to seek a
+  useful point between the low-accuracy 45-epoch run and the saturated
+  160-epoch run.
+- If the intermediate run is still saturated, reduce target epochs or redesign
+  the synthetic split so score-only confidence does not trivially solve the
+  membership task.
 
 ## Issues
 
@@ -39,6 +45,10 @@
 - IG underperformed in job `c775731d-164`, likely because the image learning
   rate 0.01 was too aggressive for this compact CNN target. The next run uses
   0.001, matching the paper's Donut/Pix2Struct IG setting more closely.
+- At 160 target epochs, membership leakage becomes too large for this scaled
+  benchmark: simple baselines reached roughly the same range as the proposed
+  optimization features. Additional milestones require a less saturated
+  setting.
 
 ## Deviations from Paper
 

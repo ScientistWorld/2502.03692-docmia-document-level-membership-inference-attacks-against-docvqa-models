@@ -31,4 +31,4 @@ action: submit
 gpus: 0
 test: true
 milestone: core_claim
-notes: "CPU retune run after IG underperformed: train compact target longer, run score/gradient baselines plus DocMIA FL and IG with paper-like image learning rate 0.001, then evaluate scores."
+notes: "CPU midpoint run after the 160-epoch setting saturated: train the compact target for 90 epochs, run score/gradient baselines plus DocMIA FL and IG at image LR 0.001, then evaluate whether the expanded setting is non-trivial."

@@ -36,6 +36,11 @@
 - IG ran end-to-end but did not support an additional milestone at learning rate 0.01: 49.33 F1 and 0.00 TPR@3%FPR.
 - Retuning IG to learning rate 0.001 and increasing target training epochs for the next job.
 
+### [2026-06-04 22:47] - core_claim
+- Job `a5f98ef0-266` completed successfully with 160 target epochs and IG learning rate 0.001.
+- IG produced strong raw attack scores, but the setting was saturated: the target reached 100% member-document QA accuracy and score/gradient baselines were also near 95 F1.
+- Keeping the milestone at `core_claim` and submitting an intermediate 90-epoch run to look for a non-saturated expansion setting.
+
 ## Stop Justification
 - Not stopping; current verified milestone is `core_claim`, and the next job
-  tests whether IG can be improved enough to support an expanded milestone.
+  tests whether IG can be evaluated in a less saturated intermediate setting.

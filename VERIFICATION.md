@@ -18,6 +18,10 @@ importing `method/`. The claimed milestone is acceptable; at minimum,
   nonzero scoring coefficients even though the verified top-level
   `scores.json` did not contain those metrics.
 - Cosmetic: Generated `__pycache__` directories were present in the workspace.
+- Critical: `scripts/evaluate.sh` used a top-level evaluator that only scored a
+  fixed set of paper-method feature names. Train/test evaluators were already
+  more general, but the default evaluator was not reusable enough for future
+  methods.
 
 ## Fixes Applied
 
@@ -30,6 +34,11 @@ importing `method/`. The claimed milestone is acceptable; at minimum,
   query budget, and auxiliary-data use.
 - Removed local generated Python cache directories, excluding the external
   `shared/` cache.
+- Generalized the top-level evaluator so it scores arbitrary numeric feature
+  arrays, binary membership predictions, and membership-score arrays while
+  retaining compatibility aliases for the reproduced methods.
+- Added a generic membership-score artifact smoke check to `scripts/run.sh` so
+  the final CPU validation job exercises the reusable evaluator path.
 - Ran `python validate.py --compare`; all scoring and structure checks passed.
 
 ## Final Judgment
@@ -44,4 +53,5 @@ problem/scoring documentation without needing the paper's method code.
 - Confidence: medium
 - Key limitation: the benchmark uses a compact synthetic DocVQA-style dataset
   and target model rather than the paper's full DocVQA/PFL datasets and large
-  public checkpoints.
+  public checkpoints; the generalized evaluator change is queued for a CPU
+  container smoke test.

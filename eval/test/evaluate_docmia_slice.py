@@ -1,4 +1,4 @@
-"""Score DocMIA method artifacts on the held-out test slice.
+"""Score document-membership artifacts on the held-out test slice.
 
 This evaluator reads per-document method outputs and never imports method code.
 """

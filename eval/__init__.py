@@ -1,1 +1,1 @@
-"""Method-agnostic evaluation code for DocMIA artifacts."""
+"""Method-agnostic evaluation code for document-membership artifacts."""

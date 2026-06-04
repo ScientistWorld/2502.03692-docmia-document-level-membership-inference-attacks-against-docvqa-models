@@ -10,8 +10,8 @@ extra documents is not a valid improvement.
 
 ## Target Model
 
-Use the provided `TinyDocVQAModel` checkpoint format and comparable parameter
-scale for the target DocVQA model. Do not replace it with a larger pretrained
+Use the provided target checkpoint format and comparable parameter scale for
+the audited DocVQA model. Do not replace it with a larger pretrained
 vision-language model for the scored experiment. The target model is the object
 being audited, not the contribution being optimized.
 
@@ -30,6 +30,6 @@ claim is explicitly auxiliary-data-free membership inference.
 
 - [ ] Uses only the provided synthetic DocVQA member/non-member data.
 - [ ] Does not train on non-member documents.
-- [ ] Uses the same target-model family and checkpoint format.
+- [ ] Uses the same target-model scale and checkpoint interface.
 - [ ] Reports the maximum number of questions used per document.
 - [ ] Reports whether auxiliary data was used.

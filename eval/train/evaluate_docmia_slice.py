@@ -1,4 +1,4 @@
-"""Score DocMIA method artifacts on the visible train slice.
+"""Score document-membership artifacts on the visible train slice.
 
 This evaluator reads per-document method outputs and never imports method code.
 """

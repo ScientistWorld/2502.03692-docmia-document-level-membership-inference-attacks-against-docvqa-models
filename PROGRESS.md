@@ -31,6 +31,8 @@
 - `scripts/run.sh` now regenerates the scaled target checkpoint and DocMIA
   output artifact instead of requiring ignored `checkpoints/` files from an
   earlier run.
+- The top-level evaluator now enumerates generic feature, prediction, and
+  membership-score methods instead of only fixed paper-method feature keys.
 
 ## Results
 
@@ -125,6 +127,8 @@
   unrelated to the reproduction code and were left untouched.
 - A final CPU test job has been prepared to verify the fresh-artifact
   `scripts/run.sh` path inside the packaged environment.
+- The final CPU test job also includes a generic membership-score artifact
+  smoke check under `tmp/` to verify reusable evaluation for future methods.
 
 ## Deviations from Paper
 

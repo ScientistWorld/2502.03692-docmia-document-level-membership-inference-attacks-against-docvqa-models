@@ -1,5 +1,5 @@
 #!/bin/bash
-# Evaluate a DocMIA method artifact on the visible train slice.
+# Evaluate a document-membership artifact on the visible train slice.
 
 set -e
 

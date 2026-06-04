@@ -2,4 +2,4 @@ action: submit
 gpus: 0
 test: true
 milestone: secondary_claims
-notes: "CPU test job to verify scripts/run.sh now regenerates the checkpoint and DocMIA outputs from scratch before evaluation."
+notes: "CPU test job to verify regenerated DocMIA outputs, train/test/top-level scoring, and a generic membership-score evaluator smoke artifact."

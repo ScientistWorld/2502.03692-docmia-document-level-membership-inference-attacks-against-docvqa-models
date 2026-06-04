@@ -1,5 +1,5 @@
 #!/bin/bash
-# Evaluate a DocMIA method artifact on the held-out test slice.
+# Evaluate a document-membership artifact on the held-out test slice.
 
 set -e
 

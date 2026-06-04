@@ -31,4 +31,4 @@ action: submit
 gpus: 0
 test: true
 milestone: core_claim
-notes: "Expanded CPU DocMIA run: regenerate procedural data, train compact target model, run score/gradient baselines plus DocMIA FL and new IG image-optimization variant, then evaluate scores."
+notes: "CPU retune run after IG underperformed: train compact target longer, run score/gradient baselines plus DocMIA FL and IG with paper-like image learning rate 0.001, then evaluate scores."

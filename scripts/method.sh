@@ -25,6 +25,6 @@ python method/docmia_attack.py \
   --lr "${DOCMIA_FL_LR:-0.001}" \
   --tau "${DOCMIA_FL_TAU:-0.00001}" \
   --ig-steps "${DOCMIA_IG_STEPS:-60}" \
-  --ig-lr "${DOCMIA_IG_LR:-0.01}" \
+  --ig-lr "${DOCMIA_IG_LR:-0.001}" \
   --ig-tau "${DOCMIA_IG_TAU:-0.00001}"
 bash scripts/evaluate.sh checkpoints/docmia_outputs.json

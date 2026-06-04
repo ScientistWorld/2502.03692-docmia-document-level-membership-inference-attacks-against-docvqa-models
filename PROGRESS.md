@@ -12,17 +12,23 @@
 
 ## Results
 
-- Job `34213ac1-050` completed the scaled white-box run. Reproduced scores:
+- Job `34213ac1-050` completed the first scaled white-box run. Reproduced scores:
   - `score_ua`: 56.77 balanced accuracy, 55.14 F1, 3.13 TPR@3%FPR.
   - `gradient_ua`: 55.73 balanced accuracy, 53.04 F1, 2.08 TPR@3%FPR.
   - `docmia_fl`: 62.50 balanced accuracy, 66.04 F1, 9.38 TPR@3%FPR.
 - This supports the core claim on the scaled benchmark: optimization-based FL features outperform score-only and one-step gradient baselines without auxiliary data.
+- Job `c775731d-164` added IG to the same run. FL stayed at 66.04 F1, but
+  `docmia_ig` reached only 49.33 F1 and 0.00 TPR@3%FPR with image learning
+  rate 0.01.
 
 ## Remaining
 
-- Rerun the expanded job and inspect `scoring/scores.json` for the added `docmia_ig` variant.
-- If results are weak, tune training epochs, FL steps, threshold, or dataset difficulty and resubmit.
-- After the core claim, add FLLoRA or IG as an additional setting if budget remains.
+- Rerun the expanded job with the paper-like IG learning rate 0.001 and longer
+  target training.
+- If IG remains weak, keep FL as the reproduced core claim and document IG as an
+  unsuccessful secondary variant on this scaled target.
+- If target accuracy remains low after longer training, redesign the synthetic
+  visual encoding in a later run rather than claiming additional milestones.
 
 ## Issues
 
@@ -30,6 +36,9 @@
 - Job `b610cdf5-51d` failed before training with `ModuleNotFoundError: No module named 'data'` because direct script execution placed `method/` on `sys.path`. The scripts now export the workspace root as `PYTHONPATH`.
 - A local import smoke test cannot run because the login environment lacks `torch`; dependencies are specified in `environment/setup.sh` and the previous setup log shows the compute overlay installed them.
 - The compact target model's DocVQA accuracy is low on the first scaled run. The membership experiment is still non-trivial and FL outperforms the included baselines, but higher target accuracy is a priority for any later scale-up.
+- IG underperformed in job `c775731d-164`, likely because the image learning
+  rate 0.01 was too aggressive for this compact CNN target. The next run uses
+  0.001, matching the paper's Donut/Pix2Struct IG setting more closely.
 
 ## Deviations from Paper
 

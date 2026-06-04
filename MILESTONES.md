@@ -31,5 +31,11 @@
 - DocMIA FL reproduced the central optimization-based signal on the scaled benchmark: 66.04 F1, above score-only (55.14 F1) and one-step gradient (53.04 F1).
 - Added the paper's IG image-optimization variant for the next expansion run.
 
+### [2026-06-04 22:04] - core_claim
+- Job `c775731d-164` completed the FL+IG expanded run.
+- IG ran end-to-end but did not support an additional milestone at learning rate 0.01: 49.33 F1 and 0.00 TPR@3%FPR.
+- Retuning IG to learning rate 0.001 and increasing target training epochs for the next job.
+
 ## Stop Justification
-- Completed at milestone `core_claim`.
+- Not stopping; current verified milestone is `core_claim`, and the next job
+  tests whether IG can be improved enough to support an expanded milestone.

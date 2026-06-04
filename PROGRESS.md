@@ -129,6 +129,9 @@
   `scripts/run.sh` path inside the packaged environment.
 - The final CPU test job also includes a generic membership-score artifact
   smoke check under `tmp/` to verify reusable evaluation for future methods.
+- As of 2026-06-04 23:47 UTC, no scheduler result newer than the generalized
+  evaluator commit is present, so the same CPU validation job is being
+  resubmitted before final `done`.
 
 ## Deviations from Paper
 

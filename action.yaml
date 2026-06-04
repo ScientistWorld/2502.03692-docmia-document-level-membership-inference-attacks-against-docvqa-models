@@ -2,4 +2,4 @@ action: submit
 gpus: 0
 test: true
 milestone: secondary_claims
-notes: "CPU test job to verify regenerated DocMIA outputs, train/test/top-level scoring, and a generic membership-score evaluator smoke artifact."
+notes: "Resubmit CPU validation after generalized evaluator fix: regenerate scaled DocMIA outputs, run train/test/top-level scoring, generic artifact smoke check, and validate.py --compare."

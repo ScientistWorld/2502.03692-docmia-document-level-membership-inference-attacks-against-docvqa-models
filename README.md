@@ -97,18 +97,18 @@ auxiliary dataset was used; lower is better for both.
 
 ## Baselines and Targets
 
-The main baselines are score-only unsupervised membership inference and a
-single-gradient unsupervised attack. The paper's full-scale white-box Donut on
-DocVQA setting reports roughly 80% balanced accuracy and 82% F1 for the
-strongest document-level attack, with low-FPR TPR around 10% at 3% FPR.
+The benchmark includes multiple reference systems that convert per-document
+evidence into membership predictions under the same data access and query
+constraints. A useful improvement should raise document-level classification
+quality without using auxiliary shadow datasets or increasing the query budget.
 
 ## Evaluation Protocol
 
 The benchmark uses a balanced member/non-member document set. Each document has
 multiple question-answer pairs, and the evaluator reads one output artifact
-containing per-method predictions or metrics. The evaluation script does not
-import method code; it only converts the generated artifact into
-`scoring/scores.json`.
+containing per-method predictions, scores, or feature arrays. The evaluation
+script does not import method code; it only converts the generated artifact
+into `scoring/scores.json`.
 
 ---
 
@@ -347,6 +347,36 @@ import method code; it only converts the generated artifact into
 
 </details>
 
+### Iteration 8: gpt-5.5 (verifier)
+- **Milestone**: `secondary_claims` | **Status**: done
+- **Working time**: 7m | **GPU**: 0.0h
+- **Jobs**: 9 total (8 completed, 1 failed)
+
+<details>
+<summary>Progress Log</summary>
+
+### [2026-06-04 18:44] - core_claim
+- Ran the scaled white-box DocMIA pipeline in a compute job.
+- DocMIA FL outperformed score-only and one-step-gradient baselines on the non-trivial synthetic DocVQA benchmark.
+
+### [2026-06-04 18:53] - core_claim_plus
+- Verified the hardened evaluator in a compute job.
+- Recomputed scores from raw feature arrays without importing method code.
+
+### [2026-06-04 22:58] - core_claim_plus
+- Added the missing FLLoRA white-box variant to the method and scoring contract.
+- Prepared a new end-to-end job to regenerate method outputs and evaluate FLLoRA from raw features.
+
+### [2026-06-04 23:02] - core_claim_plus
+- Audited the continuation workspace and confirmed the existing FL, IG, score, and gradient implementations preserve the paper's DocMIA computation at scaled size.
+- Hardened `eval/` so standalone scoring works for both fresh `doc_ids` artifacts and older artifacts that follow manifest document order.
+
+### [2026-06-04 23:11] - secondary_claims
+- Compute job `f60d7a61-e05` regenerated the full scaled DocMIA artifact with FLLoRA included.
+- `scoring/scores.json` now contains score, gradient, FL, FLLoRA, and IG results from the independent evaluator, and `python validate.py --compare` passed in the compute container.
+
+</details>
+
 
 ---
 
@@ -355,4 +385,4 @@ import method code; it only converts the generated artifact into
 **Current: secondary_claims**
 
 ## Stop Justification
-- Completed at milestone `core_claim`.
+- Completed at milestone `secondary_claims`.

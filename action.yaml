@@ -1,4 +1,5 @@
-action: done
+action: submit
 gpus: 0
 test: false
-notes: "Balanced disjoint DocMIA train/test split; 65 train metrics and 65 test metrics populated from job b35ed0ef-ec6; test slice is easier with primary F1 gaps +4.1 to +13.3 points, but scores are non-identical, non-saturated, method sets match, and all referenced metrics are present."
+milestone: core_claim
+notes: "Regenerate the 60-epoch scaled DocMIA method artifact, run independent full evaluation and validate.py --compare, then refresh train/test split scores."

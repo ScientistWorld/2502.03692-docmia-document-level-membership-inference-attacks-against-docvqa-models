@@ -8,6 +8,9 @@
 - Evaluation is separated in `eval/` and reads the method output artifact.
 - `python validate.py --compare` passes on the final 60-epoch run from job
   `75544422-7cb`.
+- Job `73b730b0-831` verified the hardened evaluator in the compute container:
+  `eval/` now recomputes metrics from raw feature arrays and labels instead of
+  copying method-reported metrics.
 - Package import handling has been fixed for the compute container by exporting
   `PYTHONPATH=/home/user` in all run scripts and adding package markers.
 
@@ -42,6 +45,10 @@
 - This reaches `core_claim_plus`: the paper's optimization-based document
   membership signal is reproduced in the original 45-epoch minimum and in a
   stronger 60-epoch target setting, with IG also implemented and runnable.
+- Job `73b730b0-831` reran `scripts/evaluate.sh` and `python validate.py
+  --compare` after evaluator hardening. It reproduced the same final scores
+  from the raw feature artifact, confirming the reported metrics are not copied
+  from method output.
 
 ## Remaining
 
@@ -68,6 +75,10 @@
 - The final 60-epoch result is still a scaled synthetic benchmark, not the
   paper's full benchmark. It preserves the DocMIA computation and a non-trivial
   baseline comparison, but the target model and data are smaller.
+- The evaluator now depends on `numpy` and `scikit-learn`, which are installed
+  by `environment/setup.sh`; the login-node Python lacks these packages, so
+  evaluator validation should be run inside the packaged container or scheduler
+  job.
 
 ## Deviations from Paper
 

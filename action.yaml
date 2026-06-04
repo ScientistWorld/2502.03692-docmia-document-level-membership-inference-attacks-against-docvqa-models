@@ -1,5 +1,5 @@
-action: submit
+action: done
 gpus: 0
-test: true
+test: false
 milestone: secondary_claims
-notes: "CPU validation job: regenerate scores from the existing DocMIA artifact with the expanded evaluator metrics, run train/test slice scoring, and validate the package."
+notes: "Final verification passed: sanitized from-scratch-facing docs, confirmed scoring/structure validation, and kept the scaled DocMIA gym at secondary_claims."

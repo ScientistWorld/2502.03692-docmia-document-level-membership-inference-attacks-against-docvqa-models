@@ -24,5 +24,9 @@
 - Compute job `f60d7a61-e05` regenerated the full scaled DocMIA artifact with FLLoRA included.
 - `scoring/scores.json` now contains score, gradient, FL, FLLoRA, and IG results from the independent evaluator, and `python validate.py --compare` passed in the compute container.
 
+### [2026-06-04 23:38] - secondary_claims
+- Re-ran local validation, Python compilation, and shell syntax checks.
+- Confirmed the packaged scaled DocMIA gym remains at `secondary_claims`.
+
 ## Stop Justification
 - Completed at milestone `secondary_claims`.

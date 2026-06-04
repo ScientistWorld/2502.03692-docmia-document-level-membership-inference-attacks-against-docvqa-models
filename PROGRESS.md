@@ -25,6 +25,9 @@
   metadata, and label-copy guard metrics. A CPU validation job is queued to
   regenerate `scoring/scores.json` from the existing method artifact inside the
   packaged environment.
+- Final local sanity pass on 2026-06-04 confirmed `python validate.py
+  --compare`, Python compilation, and shell-script syntax all pass without
+  changing the method artifacts.
 
 ## Results
 
@@ -72,6 +75,8 @@
 - This reaches `secondary_claims`: the core optimization-based membership
   signal is reproduced, and the additional FLLoRA and IG white-box variants in
   the paper's scoring contract run through the same independent evaluator.
+- A final `python validate.py --compare` check reported all scoring and
+  structural checks passed with the current `scoring/scores.json` artifact.
 
 ## Remaining
 
@@ -112,6 +117,9 @@
   login-node Python with `ModuleNotFoundError: No module named 'numpy'`; the
   run script has been switched to a CPU container validation job for the
   evaluator update.
+- The root worktree contains pre-existing special-device entries for
+  `README.md` and `manifest.json`; `git diff --stat` cannot hash them. They are
+  unrelated to the reproduction code and were left untouched.
 
 ## Deviations from Paper
 

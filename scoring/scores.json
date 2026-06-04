@@ -3,38 +3,38 @@
     "scaled_whitebox_docmia": {
       "results": {
         "score_ua": {
-          "balanced_accuracy": 56.77083333333333,
-          "accuracy": 56.770833333333336,
-          "f1": 55.13513513513514,
+          "balanced_accuracy": 94.27083333333333,
+          "accuracy": 94.27083333333334,
+          "f1": 94.58128078817734,
           "tpr_at_1_fpr": 0.0,
-          "tpr_at_3_fpr": 3.125,
+          "tpr_at_3_fpr": 100.0,
           "max_questions_per_document": 4.0,
           "uses_auxiliary_data": 0.0
         },
         "gradient_ua": {
-          "balanced_accuracy": 55.72916666666667,
-          "accuracy": 55.729166666666664,
-          "f1": 53.03867403314917,
-          "tpr_at_1_fpr": 1.0416666666666665,
-          "tpr_at_3_fpr": 2.083333333333333,
+          "balanced_accuracy": 95.3125,
+          "accuracy": 95.3125,
+          "f1": 95.52238805970148,
+          "tpr_at_1_fpr": 100.0,
+          "tpr_at_3_fpr": 100.0,
           "max_questions_per_document": 4.0,
           "uses_auxiliary_data": 0.0
         },
         "docmia_fl": {
-          "balanced_accuracy": 62.5,
-          "accuracy": 62.5,
-          "f1": 66.0377358490566,
-          "tpr_at_1_fpr": 2.083333333333333,
-          "tpr_at_3_fpr": 9.375,
+          "balanced_accuracy": 94.27083333333333,
+          "accuracy": 94.27083333333334,
+          "f1": 94.58128078817734,
+          "tpr_at_1_fpr": 100.0,
+          "tpr_at_3_fpr": 100.0,
           "max_questions_per_document": 4.0,
           "uses_auxiliary_data": 0.0
         },
         "docmia_ig": {
-          "balanced_accuracy": 41.14583333333333,
-          "accuracy": 41.14583333333333,
-          "f1": 49.327354260089685,
-          "tpr_at_1_fpr": 0.0,
-          "tpr_at_3_fpr": 0.0,
+          "balanced_accuracy": 96.35416666666667,
+          "accuracy": 96.35416666666666,
+          "f1": 96.4824120603015,
+          "tpr_at_1_fpr": 95.83333333333334,
+          "tpr_at_3_fpr": 98.95833333333334,
           "max_questions_per_document": 4.0,
           "uses_auxiliary_data": 0.0
         }

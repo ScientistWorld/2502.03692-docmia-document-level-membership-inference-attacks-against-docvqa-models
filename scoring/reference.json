@@ -44,6 +44,16 @@
           "max_questions_per_document": 10,
           "uses_auxiliary_data": 0
         },
+        "docmia_fllora": {
+          "type": "proposed",
+          "balanced_accuracy": 80.0,
+          "accuracy": 80.0,
+          "f1": 81.93,
+          "tpr_at_1_fpr": 2.67,
+          "tpr_at_3_fpr": 5.33,
+          "max_questions_per_document": 10,
+          "uses_auxiliary_data": 0
+        },
         "docmia_ig": {
           "type": "proposed",
           "balanced_accuracy": 80.33,

@@ -15,8 +15,18 @@ MEMBER_IS_LOW_SIGNAL = {
     "score_ua": False,
     "gradient_ua": True,
     "docmia_fl": True,
+    "docmia_fllora": True,
     "docmia_ig": True,
 }
+
+
+def _labels_from_manifest(data_dir: Path, doc_ids: list[str]) -> np.ndarray:
+    manifest = json.loads((data_dir / "manifest.json").read_text(encoding="utf-8"))
+    split_by_id = {doc["doc_id"]: doc["split"] for doc in manifest["documents"]}
+    missing = [doc_id for doc_id in doc_ids if doc_id not in split_by_id]
+    if missing:
+        raise KeyError(f"Unknown document ids in method output: {missing[:5]}")
+    return np.asarray([1 if split_by_id[doc_id] == "member" else 0 for doc_id in doc_ids], dtype=np.int64)
 
 
 def _normalize(features: np.ndarray) -> np.ndarray:
@@ -49,14 +59,15 @@ def _metrics(labels: np.ndarray, preds: np.ndarray, scores: np.ndarray) -> dict[
     }
 
 
-def _recompute_results(payload: dict) -> dict[str, dict[str, float]]:
+def _recompute_results(payload: dict, data_dir: Path) -> dict[str, dict[str, float]]:
     features = payload["features"]
     metadata = payload.get("metadata", {})
-    labels = np.asarray(features["labels"], dtype=np.int64)
+    labels = _labels_from_manifest(data_dir, features["doc_ids"])
     feature_keys = {
         "score_ua": "score_ua",
         "gradient_ua": "gradient_ua",
         "docmia_fl": "fl",
+        "docmia_fllora": "fllora",
         "docmia_ig": "ig",
     }
 
@@ -80,10 +91,11 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", default="checkpoints/docmia_outputs.json")
     parser.add_argument("--scores", default="scoring/scores.json")
+    parser.add_argument("--data-dir", default="data/synthetic_docvqa")
     args = parser.parse_args()
 
     payload = json.loads(Path(args.input).read_text(encoding="utf-8"))
-    results = _recompute_results(payload)
+    results = _recompute_results(payload, Path(args.data_dir))
     scores = {
         "experiments": {
             "scaled_whitebox_docmia": {

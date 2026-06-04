@@ -183,6 +183,97 @@ def fl_features(
     return np.asarray(rows, dtype=np.float64)
 
 
+def _lora_logits(
+    model: TinyDocVQAModel,
+    image: torch.Tensor,
+    question_idx: torch.Tensor,
+    lora_a: torch.Tensor,
+    lora_b: torch.Tensor,
+    scaling: float,
+) -> torch.Tensor:
+    image_features = model.image_encoder(image)
+    question_features = model.question_embedding(question_idx)
+    features = torch.cat([image_features, question_features], dim=1)
+    hidden = model.hidden(features)
+    base_logits = model.output_layer(hidden)
+    lora_update = (hidden @ lora_a.t()) @ lora_b.t()
+    return base_logits + scaling * lora_update
+
+
+def fllora_features(
+    model: TinyDocVQAModel,
+    documents: list[dict],
+    data_dir: Path,
+    answer_to_idx: dict[str, int],
+    field_to_idx: dict[str, int],
+    device: torch.device,
+    max_questions: int,
+    steps: int,
+    lr: float,
+    tau: float,
+    rank: int,
+    alpha: float,
+) -> np.ndarray:
+    """Algorithm 1 with theta replaced by LoRA(output layer) parameters."""
+
+    rows = []
+    criterion = nn.CrossEntropyLoss()
+    for param in model.parameters():
+        param.requires_grad = False
+    model.eval()
+
+    in_features = model.output_layer.in_features
+    out_features = model.output_layer.out_features
+    scaling = alpha / float(rank)
+
+    for doc in documents:
+        deltas, step_counts, utilities = [], [], []
+        image = _doc_tensor(data_dir, doc, device)
+        for qa in doc["qas"][:max_questions]:
+            lora_a = torch.empty(rank, in_features, device=device)
+            lora_b = torch.empty(out_features, rank, device=device)
+            nn.init.kaiming_uniform_(lora_a, a=math.sqrt(5))
+            nn.init.kaiming_uniform_(lora_b, a=math.sqrt(5))
+            initial_a = lora_a.detach().clone()
+            initial_b = lora_b.detach().clone()
+            lora_a.requires_grad_(True)
+            lora_b.requires_grad_(True)
+            optimizer = torch.optim.Adam([lora_a, lora_b], lr=lr)
+            q = torch.tensor([field_to_idx[qa["field"]]], device=device)
+            a = torch.tensor([answer_to_idx[qa["answer"]]], device=device)
+
+            prev_loss = math.inf
+            used_steps = 0
+            utility_trace = []
+            for step in range(steps):
+                optimizer.zero_grad(set_to_none=True)
+                logits = _lora_logits(model, image, q, lora_a, lora_b, scaling)
+                loss = criterion(logits, a)
+                utility_trace.append(float(logits.argmax(dim=1).eq(a).item()))
+                if prev_loss != math.inf and abs(prev_loss - float(loss.item())) < tau:
+                    break
+                loss.backward()
+                optimizer.step()
+                prev_loss = float(loss.item())
+                used_steps = step + 1
+
+            delta = torch.cat(
+                [
+                    (lora_a.detach() - initial_a).flatten(),
+                    (lora_b.detach() - initial_b).flatten(),
+                ]
+            ).norm()
+            deltas.append(float(delta.item()))
+            step_counts.append(float(used_steps))
+            utilities.append(float(np.mean(utility_trace)))
+
+        rows.append(_aggregate(deltas) + _aggregate(step_counts) + _aggregate(utilities))
+
+    for param in model.parameters():
+        param.requires_grad = True
+    return np.asarray(rows, dtype=np.float64)
+
+
 def ig_features(
     model: TinyDocVQAModel,
     documents: list[dict],
@@ -270,6 +361,22 @@ def run_attack(args: argparse.Namespace) -> dict:
     )
     fl_preds, fl_scores = _cluster_predict(fl_x, labels, member_is_low=True)
 
+    fllora_x = fllora_features(
+        model,
+        documents,
+        data_dir,
+        answer_to_idx,
+        field_to_idx,
+        device,
+        args.max_questions,
+        args.steps,
+        args.lr,
+        args.tau,
+        args.lora_rank,
+        args.lora_alpha,
+    )
+    fllora_preds, fllora_scores = _cluster_predict(fllora_x, labels, member_is_low=True)
+
     ig_x = ig_features(
         model,
         documents,
@@ -293,6 +400,8 @@ def run_attack(args: argparse.Namespace) -> dict:
             "optimization_steps": int(args.steps),
             "fl_learning_rate": float(args.lr),
             "fl_threshold": float(args.tau),
+            "lora_rank": int(args.lora_rank),
+            "lora_alpha": float(args.lora_alpha),
             "ig_optimization_steps": int(args.ig_steps),
             "ig_learning_rate": float(args.ig_lr),
             "ig_threshold": float(args.ig_tau),
@@ -302,13 +411,16 @@ def run_attack(args: argparse.Namespace) -> dict:
             "score_ua": score_x.tolist(),
             "gradient_ua": grad_x.tolist(),
             "fl": fl_x.tolist(),
+            "fllora": fllora_x.tolist(),
             "ig": ig_x.tolist(),
+            "doc_ids": [doc["doc_id"] for doc in documents],
             "labels": labels.tolist(),
         },
         "results": {
             "score_ua": _metrics(labels, score_preds, score_scores),
             "gradient_ua": _metrics(labels, grad_preds, grad_scores),
             "docmia_fl": _metrics(labels, fl_preds, fl_scores),
+            "docmia_fllora": _metrics(labels, fllora_preds, fllora_scores),
             "docmia_ig": _metrics(labels, ig_preds, ig_scores),
         },
     }
@@ -327,6 +439,8 @@ def main() -> None:
     parser.add_argument("--steps", type=int, default=60)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--tau", type=float, default=1e-5)
+    parser.add_argument("--lora-rank", type=int, default=4)
+    parser.add_argument("--lora-alpha", type=float, default=4.0)
     parser.add_argument("--ig-steps", type=int, default=60)
     parser.add_argument("--ig-lr", type=float, default=1e-2)
     parser.add_argument("--ig-tau", type=float, default=1e-5)

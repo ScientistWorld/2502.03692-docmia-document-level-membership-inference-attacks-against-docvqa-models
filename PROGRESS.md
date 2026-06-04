@@ -5,6 +5,7 @@
 - Paper analysis is complete for the main DocMIA white-box algorithm.
 - A scaled document-level DocVQA benchmark has been implemented in `data/`.
 - The target DocVQA model, score baseline, gradient baseline, DocMIA FL attack, and DocMIA IG attack are implemented.
+- The DocMIA FLLoRA attack has been added and is queued for end-to-end validation.
 - Evaluation is separated in `eval/` and reads the method output artifact.
 - `python validate.py --compare` passes on the final 60-epoch run from job
   `75544422-7cb`.
@@ -54,7 +55,7 @@
 
 - Full-scale DocVQA/PFL-DocVQA reproduction with VT5/Donut/Pix2Struct remains
   out of scope for this compute budget.
-- FLLoRA is not implemented; the reproduced white-box variants are FL and IG.
+- Validate the newly added FLLoRA variant in a compute job and record its scores.
 
 ## Issues
 
@@ -79,6 +80,9 @@
   by `environment/setup.sh`; the login-node Python lacks these packages, so
   evaluator validation should be run inside the packaged container or scheduler
   job.
+- FLLoRA was added after the last successful scoring job. The current
+  `scoring/scores.json` will not include `docmia_fllora` until the submitted
+  regeneration job finishes.
 
 ## Deviations from Paper
 

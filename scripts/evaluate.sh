@@ -28,4 +28,5 @@ export PYTHONPATH=/home/user:${PYTHONPATH:-}
 mkdir -p scoring
 
 INPUT="${1:-checkpoints/docmia_outputs.json}"
-python eval/evaluate_docmia.py --input "$INPUT" --scores scoring/scores.json
+DATA_DIR="${2:-data/synthetic_docvqa}"
+python eval/evaluate_docmia.py --input "$INPUT" --data-dir "$DATA_DIR" --scores scoring/scores.json

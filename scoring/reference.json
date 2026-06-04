@@ -43,6 +43,16 @@
           "tpr_at_3_fpr": 10.67,
           "max_questions_per_document": 10,
           "uses_auxiliary_data": 0
+        },
+        "docmia_ig": {
+          "type": "proposed",
+          "balanced_accuracy": 80.33,
+          "accuracy": 80.33,
+          "f1": 82.34,
+          "tpr_at_1_fpr": 1.33,
+          "tpr_at_3_fpr": 8.0,
+          "max_questions_per_document": 10,
+          "uses_auxiliary_data": 0
         }
       }
     }

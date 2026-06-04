@@ -19,9 +19,9 @@ def main() -> None:
         "experiments": {
             "scaled_whitebox_docmia": {
                 "results": {
-                    "score_ua": results["score_ua"],
-                    "gradient_ua": results["gradient_ua"],
-                    "docmia_fl": results["docmia_fl"],
+                    name: results[name]
+                    for name in ("score_ua", "gradient_ua", "docmia_fl", "docmia_ig")
+                    if name in results
                 }
             }
         }

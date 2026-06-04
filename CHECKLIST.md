@@ -36,9 +36,9 @@ Check off items as you complete them. Order doesn't matter — work however make
 - [ ] Pretrained models downloaded if needed
 
 ## Milestones
-- [ ] `method_runs` — executes end-to-end without errors (resubmission pending after import-path fix)
-- [ ] `core_claim` — minimum experiment supports central claim
-- [ ] `core_claim_plus` — additional settings
+- [x] `method_runs` — executes end-to-end without errors
+- [x] `core_claim` — minimum experiment supports central claim
+- [ ] `core_claim_plus` — additional settings (IG expansion submitted next)
 - [ ] `secondary_claims`
 - [ ] `majority`
 - [ ] `near_complete`

@@ -1,6 +1,6 @@
 # Reproduction Milestones
 
-**Current: none**
+**Current: core_claim**
 
 <!-- Milestone levels (update "Current" above as you progress):
   none             — just started, no meaningful progress yet
@@ -26,5 +26,10 @@
 - Added package markers and exported `PYTHONPATH=/home/user` in all scripts.
 - `python validate.py --reference-only` passes; resubmitting the full scaled DocMIA run.
 
+### [2026-06-04 22:00] - core_claim
+- Job `34213ac1-050` completed end-to-end and wrote `scoring/scores.json`.
+- DocMIA FL reproduced the central optimization-based signal on the scaled benchmark: 66.04 F1, above score-only (55.14 F1) and one-step gradient (53.04 F1).
+- Added the paper's IG image-optimization variant for the next expansion run.
+
 ## Stop Justification
-- Completed at milestone `none`.
+- Completed at milestone `core_claim`.

@@ -30,5 +30,5 @@
 action: submit
 gpus: 0
 test: true
-milestone: none
-notes: "Resubmit CPU smoke/full scaled DocMIA run after fixing container import path: generate procedural DocVQA data, train compact target model, run score/gradient baselines and DocMIA FL, evaluate scores."
+milestone: core_claim
+notes: "Expanded CPU DocMIA run: regenerate procedural data, train compact target model, run score/gradient baselines plus DocMIA FL and new IG image-optimization variant, then evaluate scores."

@@ -9,3 +9,6 @@ training documents from held-out documents in a balanced DocVQA-style setting.
 - **Secondary metrics**: `balanced_accuracy`, `accuracy`, `tpr_at_1_fpr`, `tpr_at_3_fpr` (higher is better)
 - **Constraint metrics**: `max_questions_per_document`, `uses_auxiliary_data` (lower is better)
 - **How to run**: `bash scripts/reproduce.sh`, or run a compatible method that writes `checkpoints/docmia_outputs.json` and then call `bash scripts/evaluate.sh`.
+- **Expected methods**: baseline `score_ua`, baseline `gradient_ua`,
+  proposed `docmia_fl`, and proposed `docmia_ig` when the expanded method
+  artifact is available.

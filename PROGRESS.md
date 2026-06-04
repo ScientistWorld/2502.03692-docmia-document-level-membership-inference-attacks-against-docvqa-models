@@ -4,20 +4,23 @@
 
 - Paper analysis is complete for the main DocMIA white-box algorithm.
 - A scaled document-level DocVQA benchmark has been implemented in `data/`.
-- The target DocVQA model, score baseline, gradient baseline, and DocMIA FL attack are implemented.
+- The target DocVQA model, score baseline, gradient baseline, DocMIA FL attack, and DocMIA IG attack are implemented.
 - Evaluation is separated in `eval/` and reads the method output artifact.
-- `python validate.py --reference-only` passes.
+- `python validate.py --compare` passes on the FL run from job `34213ac1-050`.
 - Package import handling has been fixed for the compute container by exporting
   `PYTHONPATH=/home/user` in all run scripts and adding package markers.
 
 ## Results
 
-- No reproduced scores yet. The first job will train the scaled target model, run DocMIA FL, and write `scoring/scores.json`.
+- Job `34213ac1-050` completed the scaled white-box run. Reproduced scores:
+  - `score_ua`: 56.77 balanced accuracy, 55.14 F1, 3.13 TPR@3%FPR.
+  - `gradient_ua`: 55.73 balanced accuracy, 53.04 F1, 2.08 TPR@3%FPR.
+  - `docmia_fl`: 62.50 balanced accuracy, 66.04 F1, 9.38 TPR@3%FPR.
+- This supports the core claim on the scaled benchmark: optimization-based FL features outperform score-only and one-step gradient baselines without auxiliary data.
 
 ## Remaining
 
-- Rerun the submitted job and inspect `scoring/scores.json`.
-- If FL clearly beats trivial chance and is competitive with the baselines, update to `core_claim`.
+- Rerun the expanded job and inspect `scoring/scores.json` for the added `docmia_ig` variant.
 - If results are weak, tune training epochs, FL steps, threshold, or dataset difficulty and resubmit.
 - After the core claim, add FLLoRA or IG as an additional setting if budget remains.
 
@@ -26,6 +29,7 @@
 - The full paper uses DocVQA/PFL-DocVQA and 200M-1.3B parameter public checkpoints. This scaled reproduction uses a procedural DocVQA-style dataset and a compact target model to fit the benchmark budget while preserving the DocMIA computation.
 - Job `b610cdf5-51d` failed before training with `ModuleNotFoundError: No module named 'data'` because direct script execution placed `method/` on `sys.path`. The scripts now export the workspace root as `PYTHONPATH`.
 - A local import smoke test cannot run because the login environment lacks `torch`; dependencies are specified in `environment/setup.sh` and the previous setup log shows the compute overlay installed them.
+- The compact target model's DocVQA accuracy is low on the first scaled run. The membership experiment is still non-trivial and FL outperforms the included baselines, but higher target accuracy is a priority for any later scale-up.
 
 ## Deviations from Paper
 

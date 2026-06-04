@@ -183,6 +183,63 @@ def fl_features(
     return np.asarray(rows, dtype=np.float64)
 
 
+def ig_features(
+    model: TinyDocVQAModel,
+    documents: list[dict],
+    data_dir: Path,
+    answer_to_idx: dict[str, int],
+    field_to_idx: dict[str, int],
+    device: torch.device,
+    max_questions: int,
+    steps: int,
+    lr: float,
+    tau: float,
+) -> np.ndarray:
+    """Algorithm 1 with theta replaced by the document image pixels (IG)."""
+
+    rows = []
+    criterion = nn.CrossEntropyLoss()
+    for param in model.parameters():
+        param.requires_grad = False
+    model.eval()
+
+    for doc in documents:
+        deltas, step_counts, utilities = [], [], []
+        base_image = _doc_tensor(data_dir, doc, device)
+        for qa in doc["qas"][:max_questions]:
+            image = base_image.detach().clone().requires_grad_(True)
+            optimizer = torch.optim.Adam([image], lr=lr)
+            q = torch.tensor([field_to_idx[qa["field"]]], device=device)
+            a = torch.tensor([answer_to_idx[qa["answer"]]], device=device)
+
+            prev_loss = math.inf
+            used_steps = 0
+            utility_trace = []
+            for step in range(steps):
+                optimizer.zero_grad(set_to_none=True)
+                logits = model(image.clamp(0.0, 1.0), q)
+                loss = criterion(logits, a)
+                utility_trace.append(float(logits.argmax(dim=1).eq(a).item()))
+                if prev_loss != math.inf and abs(prev_loss - float(loss.item())) < tau:
+                    break
+                loss.backward()
+                optimizer.step()
+                with torch.no_grad():
+                    image.clamp_(0.0, 1.0)
+                prev_loss = float(loss.item())
+                used_steps = step + 1
+
+            deltas.append(float((image.detach() - base_image).norm().item()))
+            step_counts.append(float(used_steps))
+            utilities.append(float(np.mean(utility_trace)))
+
+        rows.append(_aggregate(deltas) + _aggregate(step_counts) + _aggregate(utilities))
+
+    for param in model.parameters():
+        param.requires_grad = True
+    return np.asarray(rows, dtype=np.float64)
+
+
 def run_attack(args: argparse.Namespace) -> dict:
     data_dir = Path(args.data_dir)
     manifest = load_manifest(data_dir)
@@ -213,6 +270,20 @@ def run_attack(args: argparse.Namespace) -> dict:
     )
     fl_preds, fl_scores = _cluster_predict(fl_x, labels, member_is_low=True)
 
+    ig_x = ig_features(
+        model,
+        documents,
+        data_dir,
+        answer_to_idx,
+        field_to_idx,
+        device,
+        args.max_questions,
+        args.ig_steps,
+        args.ig_lr,
+        args.ig_tau,
+    )
+    ig_preds, ig_scores = _cluster_predict(ig_x, labels, member_is_low=True)
+
     output = {
         "metadata": {
             "num_documents": int(len(documents)),
@@ -222,18 +293,23 @@ def run_attack(args: argparse.Namespace) -> dict:
             "optimization_steps": int(args.steps),
             "fl_learning_rate": float(args.lr),
             "fl_threshold": float(args.tau),
+            "ig_optimization_steps": int(args.ig_steps),
+            "ig_learning_rate": float(args.ig_lr),
+            "ig_threshold": float(args.ig_tau),
             "uses_auxiliary_data": 0.0,
         },
         "features": {
             "score_ua": score_x.tolist(),
             "gradient_ua": grad_x.tolist(),
             "fl": fl_x.tolist(),
+            "ig": ig_x.tolist(),
             "labels": labels.tolist(),
         },
         "results": {
             "score_ua": _metrics(labels, score_preds, score_scores),
             "gradient_ua": _metrics(labels, grad_preds, grad_scores),
             "docmia_fl": _metrics(labels, fl_preds, fl_scores),
+            "docmia_ig": _metrics(labels, ig_preds, ig_scores),
         },
     }
     for result in output["results"].values():
@@ -251,6 +327,9 @@ def main() -> None:
     parser.add_argument("--steps", type=int, default=60)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--tau", type=float, default=1e-5)
+    parser.add_argument("--ig-steps", type=int, default=60)
+    parser.add_argument("--ig-lr", type=float, default=1e-2)
+    parser.add_argument("--ig-tau", type=float, default=1e-5)
     parser.add_argument("--cpu", action="store_true")
     args = parser.parse_args()
 

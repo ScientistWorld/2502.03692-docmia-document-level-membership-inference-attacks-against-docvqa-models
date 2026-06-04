@@ -58,6 +58,6 @@ def iter_documents(root: str | Path, splits: Iterable[str] = ("member", "nonmemb
 
 def load_image(path: str | Path) -> torch.Tensor:
     image = Image.open(path).convert("L").resize((160, 96))
-    values = torch.ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
+    values = torch.frombuffer(bytearray(image.tobytes()), dtype=torch.uint8)
     values = values.float().view(96, 160) / 255.0
     return values.unsqueeze(0)

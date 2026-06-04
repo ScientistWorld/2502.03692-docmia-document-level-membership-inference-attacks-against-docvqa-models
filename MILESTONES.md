@@ -41,6 +41,11 @@
 - IG produced strong raw attack scores, but the setting was saturated: the target reached 100% member-document QA accuracy and score/gradient baselines were also near 95 F1.
 - Keeping the milestone at `core_claim` and submitting an intermediate 90-epoch run to look for a non-saturated expansion setting.
 
+### [2026-06-04 23:04] - core_claim
+- Job `b823b8a9-21e` completed the 90-epoch midpoint run.
+- The run remained saturated: score-only and gradient baselines reached 94-95 F1, while DocMIA FL/IG did not improve over them.
+- Keeping the milestone at `core_claim` and lowering the next search point to 60 epochs.
+
 ## Stop Justification
 - Not stopping; current verified milestone is `core_claim`, and the next job
-  tests whether IG can be evaluated in a less saturated intermediate setting.
+  searches for a less saturated default between 45 and 90 target epochs.

@@ -31,4 +31,4 @@ action: submit
 gpus: 0
 test: true
 milestone: core_claim
-notes: "CPU midpoint run after the 160-epoch setting saturated: train the compact target for 90 epochs, run score/gradient baselines plus DocMIA FL and IG at image LR 0.001, then evaluate whether the expanded setting is non-trivial."
+notes: "CPU search run after 90 epochs remained saturated: train the compact target for 60 epochs, run score/gradient baselines plus DocMIA FL and IG at image LR 0.001, then evaluate whether this preserves a non-trivial core-claim setting."

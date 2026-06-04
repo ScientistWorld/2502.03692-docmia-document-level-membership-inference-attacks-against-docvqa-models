@@ -26,15 +26,18 @@
   score/gradient baselines were also near-saturated. This is useful as a
   sanity check for the implemented IG attack, but it is not a stronger
   milestone because the benchmark condition became too easy.
+- Job `b823b8a9-21e` tried a 90-epoch midpoint. The target was still highly
+  overfit (95.31% member QA accuracy, 33.59% nonmember QA accuracy), and
+  score/gradient baselines reached 94-95 F1. The proposed FL/IG variants ran
+  correctly but did not beat those saturated baselines, so this run does not
+  update the milestone.
 
 ## Remaining
 
-- Rerun the expanded job at an intermediate 90-epoch target setting to seek a
-  useful point between the low-accuracy 45-epoch run and the saturated
-  160-epoch run.
-- If the intermediate run is still saturated, reduce target epochs or redesign
-  the synthetic split so score-only confidence does not trivially solve the
-  membership task.
+- Rerun at 60 target epochs, closer to the non-saturated 45-epoch setting that
+  established the core claim, while keeping the paper-like IG learning rate.
+- If 60 epochs remains saturated, revert the default reproduction to the known
+  45-epoch core-claim setting and package that as the final gym.
 
 ## Issues
 
@@ -49,6 +52,9 @@
   benchmark: simple baselines reached roughly the same range as the proposed
   optimization features. Additional milestones require a less saturated
   setting.
+- At 90 target epochs, the score-only and gradient baselines remained too
+  strong for a useful expansion comparison, so the next search point is 60
+  epochs.
 
 ## Deviations from Paper
 

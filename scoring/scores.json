@@ -3,38 +3,38 @@
     "scaled_whitebox_docmia": {
       "results": {
         "score_ua": {
-          "balanced_accuracy": 94.27083333333333,
-          "accuracy": 94.27083333333334,
-          "f1": 94.58128078817734,
-          "tpr_at_1_fpr": 82.29166666666666,
-          "tpr_at_3_fpr": 97.91666666666666,
+          "balanced_accuracy": 72.39583333333333,
+          "accuracy": 72.39583333333334,
+          "f1": 69.36416184971098,
+          "tpr_at_1_fpr": 10.416666666666668,
+          "tpr_at_3_fpr": 11.458333333333332,
           "max_questions_per_document": 4.0,
           "uses_auxiliary_data": 0.0
         },
         "gradient_ua": {
-          "balanced_accuracy": 95.3125,
-          "accuracy": 95.3125,
-          "f1": 95.47738693467338,
-          "tpr_at_1_fpr": 82.29166666666666,
-          "tpr_at_3_fpr": 94.79166666666666,
+          "balanced_accuracy": 68.22916666666667,
+          "accuracy": 68.22916666666666,
+          "f1": 63.905325443786985,
+          "tpr_at_1_fpr": 2.083333333333333,
+          "tpr_at_3_fpr": 4.166666666666666,
           "max_questions_per_document": 4.0,
           "uses_auxiliary_data": 0.0
         },
         "docmia_fl": {
-          "balanced_accuracy": 92.70833333333334,
-          "accuracy": 92.70833333333334,
-          "f1": 92.92929292929293,
-          "tpr_at_1_fpr": 19.791666666666664,
-          "tpr_at_3_fpr": 55.208333333333336,
+          "balanced_accuracy": 71.875,
+          "accuracy": 71.875,
+          "f1": 71.57894736842105,
+          "tpr_at_1_fpr": 10.416666666666668,
+          "tpr_at_3_fpr": 13.541666666666666,
           "max_questions_per_document": 4.0,
           "uses_auxiliary_data": 0.0
         },
         "docmia_ig": {
-          "balanced_accuracy": 84.89583333333333,
-          "accuracy": 84.89583333333334,
-          "f1": 86.87782805429865,
-          "tpr_at_1_fpr": 14.583333333333334,
-          "tpr_at_3_fpr": 38.54166666666667,
+          "balanced_accuracy": 70.3125,
+          "accuracy": 70.3125,
+          "f1": 71.35678391959799,
+          "tpr_at_1_fpr": 1.0416666666666665,
+          "tpr_at_3_fpr": 4.166666666666666,
           "max_questions_per_document": 4.0,
           "uses_auxiliary_data": 0.0
         }

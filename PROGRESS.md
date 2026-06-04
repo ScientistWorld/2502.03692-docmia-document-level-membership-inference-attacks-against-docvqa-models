@@ -6,7 +6,8 @@
 - A scaled document-level DocVQA benchmark has been implemented in `data/`.
 - The target DocVQA model, score baseline, gradient baseline, DocMIA FL attack, and DocMIA IG attack are implemented.
 - Evaluation is separated in `eval/` and reads the method output artifact.
-- `python validate.py --compare` passes on the FL run from job `34213ac1-050`.
+- `python validate.py --compare` passes on the final 60-epoch run from job
+  `75544422-7cb`.
 - Package import handling has been fixed for the compute container by exporting
   `PYTHONPATH=/home/user` in all run scripts and adding package markers.
 
@@ -31,13 +32,22 @@
   score/gradient baselines reached 94-95 F1. The proposed FL/IG variants ran
   correctly but did not beat those saturated baselines, so this run does not
   update the milestone.
+- Job `75544422-7cb` is the final default run at 60 target epochs. The target
+  learned a non-trivial amount (41.67% member QA accuracy, 19.53% nonmember QA
+  accuracy), and DocMIA FL improved over both baselines:
+  - `score_ua`: 72.40 balanced accuracy, 69.36 F1, 11.46 TPR@3%FPR.
+  - `gradient_ua`: 68.23 balanced accuracy, 63.91 F1, 4.17 TPR@3%FPR.
+  - `docmia_fl`: 71.88 balanced accuracy, 71.58 F1, 13.54 TPR@3%FPR.
+  - `docmia_ig`: 70.31 balanced accuracy, 71.36 F1, 4.17 TPR@3%FPR.
+- This reaches `core_claim_plus`: the paper's optimization-based document
+  membership signal is reproduced in the original 45-epoch minimum and in a
+  stronger 60-epoch target setting, with IG also implemented and runnable.
 
 ## Remaining
 
-- Rerun at 60 target epochs, closer to the non-saturated 45-epoch setting that
-  established the core claim, while keeping the paper-like IG learning rate.
-- If 60 epochs remains saturated, revert the default reproduction to the known
-  45-epoch core-claim setting and package that as the final gym.
+- Full-scale DocVQA/PFL-DocVQA reproduction with VT5/Donut/Pix2Struct remains
+  out of scope for this compute budget.
+- FLLoRA is not implemented; the reproduced white-box variants are FL and IG.
 
 ## Issues
 
@@ -55,6 +65,9 @@
 - At 90 target epochs, the score-only and gradient baselines remained too
   strong for a useful expansion comparison, so the next search point is 60
   epochs.
+- The final 60-epoch result is still a scaled synthetic benchmark, not the
+  paper's full benchmark. It preserves the DocMIA computation and a non-trivial
+  baseline comparison, but the target model and data are smaller.
 
 ## Deviations from Paper
 

@@ -27,8 +27,6 @@
 #   milestone: core_claim
 #   notes: "Reproduced the core claim. Environment packaged."
 
-action: submit
-gpus: 0
-test: true
-milestone: core_claim
-notes: "CPU search run after 90 epochs remained saturated: train the compact target for 60 epochs, run score/gradient baselines plus DocMIA FL and IG at image LR 0.001, then evaluate whether this preserves a non-trivial core-claim setting."
+action: done
+milestone: core_claim_plus
+notes: "Packaged a reusable scaled DocMIA environment. Final 60-epoch run is non-saturated and supports the core claim beyond the initial minimum: DocMIA FL improves over score-only and gradient baselines on F1 and TPR@3%FPR, with IG also implemented and evaluated."

@@ -1,6 +1,6 @@
 # Reproduction Milestones
 
-**Current: core_claim**
+**Current: core_claim_plus**
 
 <!-- Milestone levels (update "Current" above as you progress):
   none             — just started, no meaningful progress yet
@@ -46,6 +46,12 @@
 - The run remained saturated: score-only and gradient baselines reached 94-95 F1, while DocMIA FL/IG did not improve over them.
 - Keeping the milestone at `core_claim` and lowering the next search point to 60 epochs.
 
+### [2026-06-04 23:12] - core_claim_plus
+- Job `75544422-7cb` completed the 60-epoch run.
+- The setting is non-saturated and supports the central claim beyond the original 45-epoch minimum: DocMIA FL reached 71.58 F1 and 13.54 TPR@3%FPR, above score-only (69.36 F1, 11.46 TPR@3%FPR) and one-step gradient (63.91 F1, 4.17 TPR@3%FPR).
+- The expanded IG variant also ran end-to-end at the paper-like image learning rate, but FL is the strongest reproduced proposed variant in this scaled gym.
+
 ## Stop Justification
-- Not stopping; current verified milestone is `core_claim`, and the next job
-  searches for a less saturated default between 45 and 90 target epochs.
+- Stopping at `core_claim_plus`: the method, baselines, evaluator, container
+  setup, procedural data, scoring contracts, and final non-saturated 60-epoch
+  results are packaged.

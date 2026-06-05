@@ -137,6 +137,8 @@
   validated the full scaled suite, `b35ed0ef-ec6` validated train/test scoring,
   and the current local `python validate.py --compare` plus shell syntax checks
   pass.
+- Final recheck on 2026-06-05 00:02 UTC made `scripts/reproduce.sh` explicitly
+  regenerate top-level, train, and test scoring artifacts before validation.
 
 ## Deviations from Paper
 

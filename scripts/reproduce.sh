@@ -21,4 +21,7 @@ export PYTHONPATH=/home/user:${PYTHONPATH:-}
 
 bash scripts/download.sh
 bash scripts/method.sh
+bash scripts/evaluate_train.sh checkpoints/docmia_outputs.json
+bash scripts/evaluate_test.sh checkpoints/docmia_outputs.json
+bash scripts/evaluate.sh checkpoints/docmia_outputs.json data/synthetic_docvqa
 python validate.py --compare

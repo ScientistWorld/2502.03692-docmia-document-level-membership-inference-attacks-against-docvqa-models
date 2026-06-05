@@ -33,5 +33,9 @@
   current local validation checks.
 - Confirmed the workspace is ready as a scaled reusable research gym.
 
+### [2026-06-05 00:02] - secondary_claims
+- Rechecked the final workspace and tightened `scripts/reproduce.sh` so the
+  end-to-end entrypoint explicitly refreshes all scoring artifacts.
+
 ## Stop Justification
 - Completed at milestone `secondary_claims`.

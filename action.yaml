@@ -1,3 +1,3 @@
 action: done
 milestone: secondary_claims
-notes: "Final verification complete: scaled DocMIA reproduction validated by successful container jobs and current scoring/structure checks."
+notes: "Final verification complete: scaled DocMIA reproduction validated; reproduce.sh now refreshes all score files before validation."

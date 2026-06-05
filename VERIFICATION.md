@@ -22,6 +22,9 @@ importing `method/`. The claimed milestone is acceptable; at minimum,
   fixed set of paper-method feature names. Train/test evaluators were already
   more general, but the default evaluator was not reusable enough for future
   methods.
+- Minor: On the 2026-06-05 recheck, `scripts/reproduce.sh` relied on
+  `method.sh` to run the top-level evaluator implicitly and did not explicitly
+  refresh the train/test score files.
 
 ## Fixes Applied
 
@@ -43,6 +46,9 @@ importing `method/`. The claimed milestone is acceptable; at minimum,
 - Confirmed prior container jobs regenerated and evaluated the scaled DocMIA
   artifact end-to-end, including job `f60d7a61-e05` for the full scored suite
   and job `b35ed0ef-ec6` for train/test scoring.
+- Updated `scripts/reproduce.sh` so a full reproduction explicitly runs
+  `evaluate_train.sh`, `evaluate_test.sh`, and `evaluate.sh` before
+  `validate.py --compare`.
 
 ## Final Judgment
 
@@ -53,7 +59,7 @@ problem/scoring documentation without needing the paper's method code.
 
 - Milestone: secondary_claims
 - Ready for gym use: yes
-- Confidence: medium
+- Confidence: high
 - Key limitation: the benchmark uses a compact synthetic DocVQA-style dataset
   and target model rather than the paper's full DocVQA/PFL datasets and large
   public checkpoints.

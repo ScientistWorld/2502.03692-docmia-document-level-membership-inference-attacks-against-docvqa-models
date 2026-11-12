@@ -1,3 +1,8 @@
-action: done
+# Once you set action to 'submit' or 'done', STOP immediately.
+# Do NOT sleep, poll, or wait for jobs. The system reads this file
+# only after your turn ends.
+action: pending
+gpus: 0
+test: false
 milestone: secondary_claims
-notes: "Final verification complete: scaled DocMIA reproduction validated; reproduce.sh now refreshes all score files before validation."
+notes: ""

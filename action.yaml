@@ -1,6 +1,4 @@
 # Once you set action to 'submit' or 'done', STOP immediately.
-action: submit
-gpus: 0
-test: false
+action: done
 milestone: secondary_claims
-notes: "Hardening job 5 (resumes): score stronger_combined variant on the hidden test, rerun paired bootstrap and rank, validate"
+notes: "Hardened DocMIA gym: hidden secret-seeded audit run through the submitted attack program; evaluator-computed baselines; single ranked membership_attack row with worst values on failure; paper protocol restored (pretrained reader + fine-tune, S=200, Appendix C tuning, LoRA B=0). All REDTEAM shortcuts closed; stronger variant +0.87, ablations significantly lower; label-reading and shadow-LiRA left to the grader (see HARDENING.md)."

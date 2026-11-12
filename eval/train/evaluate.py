@@ -48,10 +48,10 @@ EXPERIMENTS = {
     },
     "few_question_documents": {
         "max_questions": 2,
-        "metrics": ("balanced_accuracy", "f1", "roc_auc", "tpr_at_3_fpr"),
+        "metrics": ("balanced_accuracy", "f1", "roc_auc", "tpr_at_3_fpr", "member_recall"),
     },
 }
-BASELINES = ("loss_ta", "score_ua", "scoreloss_ua_all", "gradient_ua")
+BASELINES = ("loss_ta", "score_ua", "score_ua_all", "scoreloss_ua_all", "gradient_ua")
 
 
 class DevReader(nn.Module):
@@ -144,6 +144,7 @@ def _baselines(audit: dict) -> dict:
     mean_loss = loss_phi[:, 0]
     out = {"loss_ta": ((mean_loss <= mean_loss.mean()).astype(np.int64), -mean_loss)}
     out["score_ua"] = _kmeans_attack(util_phi[:, :1], 0, member_high=True)
+    out["score_ua_all"] = _kmeans_attack(util_phi, 0, member_high=True)
     out["scoreloss_ua_all"] = _kmeans_attack(np.concatenate([loss_phi, util_phi], 1), 0, member_high=False)
     out["gradient_ua"] = _kmeans_attack(np.concatenate([grad_phi, util_phi], 1), 0, member_high=False)
     return out
@@ -157,6 +158,7 @@ def _metrics(y: np.ndarray, preds: np.ndarray, scores: np.ndarray, names) -> dic
         "roc_auc": 100.0 * roc_auc_score(y, scores),
         "tpr_at_1_fpr": 100.0 * float(tpr[fpr <= 0.01].max()),
         "tpr_at_3_fpr": 100.0 * float(tpr[fpr <= 0.03].max()),
+        "member_recall": 100.0 * float(preds[y == 1].mean()),
     }
     return {k: float(values[k]) for k in names}
 

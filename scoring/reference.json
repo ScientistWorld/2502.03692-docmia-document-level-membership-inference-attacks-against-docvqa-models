@@ -1,75 +1,43 @@
 {
   "experiments": {
     "scaled_whitebox_docmia": {
-      "description": "White-box document-level membership inference on DocVQA-style data. Paper reference is the DocMIA white-box Donut/DocVQA setting from Table 11 and Table 12.",
-      "weight": 1.0,
+      "description": "White-box document-level membership inference against a document VQA model fine-tuned from a public pre-trained checkpoint, on 600 hidden candidate documents (300 members, 300 non-members). Paper reference: DocMIA white-box results against Donut on DocVQA (Tables 1, 11, 12, 16).",
+      "weight": 0.75,
       "primary_metric": "f1",
+      "_scaling_note": "Scaled setting: procedural DocVQA-style forms (80x96 px, 5 fields, 1-5 questions per document) and a ~1.1M-parameter OCR-free reader pre-trained on a public generated corpus and fine-tuned on 600 private documents with early stopping, instead of DocVQA and the 201M-parameter Donut. The paper's numbers below are kept as the published reference; the gym ranks against its own reproduced reference run (scoring/scores_test.json). The paper attacks up to 10 questions per document; here every document's 1-5 questions are available.",
       "metrics": {
-        "balanced_accuracy": {"higher_is_better": true, "coefficient": 1.0, "description": "Class-balanced membership accuracy on the document split."},
-        "accuracy": {"higher_is_better": true, "coefficient": 0.4, "description": "Overall document membership classification accuracy."},
-        "f1": {"higher_is_better": true, "coefficient": 1.0, "description": "Headline membership inference F1 score."},
-        "matthews_corrcoef": {"higher_is_better": true, "coefficient": 0.0, "description": "Diagnostic correlation-style classification score that penalizes class collapse."},
-        "roc_auc": {"higher_is_better": true, "coefficient": 0.0, "description": "Diagnostic threshold-free ranking quality of membership scores."},
-        "average_precision": {"higher_is_better": true, "coefficient": 0.0, "description": "Diagnostic precision-recall ranking quality for member documents."},
-        "tpr_at_1_fpr": {"higher_is_better": true, "coefficient": 0.4, "description": "Member-document true positive rate at 1 percent false positive rate."},
-        "tpr_at_3_fpr": {"higher_is_better": true, "coefficient": 0.5, "description": "Member-document true positive rate at 3 percent false positive rate."},
-        "predicted_member_rate_imbalance": {"higher_is_better": false, "coefficient": 0.0, "description": "Diagnostic absolute distance between the predicted member rate and the balanced evaluation prior."},
-        "max_questions_per_document": {"higher_is_better": false, "coefficient": -0.1, "description": "Declared maximum number of document questions consumed by the attack."},
-        "uses_auxiliary_data": {"higher_is_better": false, "coefficient": -1.0, "description": "Penalty flag for methods that use auxiliary or shadow data."},
-        "constraint_metadata_missing": {"higher_is_better": false, "coefficient": 0.0, "description": "Diagnostic flag when required query-budget or auxiliary-data metadata is absent."},
-        "label_copy_suspect": {"higher_is_better": false, "coefficient": 0.0, "description": "Diagnostic flag for artifacts whose raw binary outputs directly copy known split labels."}
+        "balanced_accuracy": {"higher_is_better": true, "coefficient": 1.0, "description": "Balanced accuracy of the attack's member/non-member decisions (the paper's ACC)."},
+        "f1": {"higher_is_better": true, "coefficient": 1.0, "description": "F1 of the member class from the attack's decisions (the paper's headline metric)."},
+        "tpr_at_1_fpr": {"higher_is_better": true, "coefficient": 0.4, "description": "True positive rate at <=1% false positive rate from the attack's membership scores."},
+        "tpr_at_3_fpr": {"higher_is_better": true, "coefficient": 0.5, "description": "True positive rate at <=3% false positive rate from the attack's membership scores (Tables 2 and 4)."},
+        "roc_auc": {"higher_is_better": true, "coefficient": 0.0, "description": "Diagnostic only: threshold-free ranking quality of the membership scores (not reported by the paper)."}
       },
       "results": {
-        "score_ua": {
-          "type": "baseline",
-          "balanced_accuracy": 80.5,
-          "accuracy": 80.5,
-          "f1": 81.1,
-          "tpr_at_1_fpr": 5.0,
-          "tpr_at_3_fpr": 11.0,
-          "max_questions_per_document": 10,
-          "uses_auxiliary_data": 0
-        },
-        "gradient_ua": {
-          "type": "baseline",
-          "balanced_accuracy": 77.17,
-          "accuracy": 77.17,
-          "f1": 75.92,
-          "tpr_at_1_fpr": 3.67,
-          "tpr_at_3_fpr": 6.0,
-          "max_questions_per_document": 10,
-          "uses_auxiliary_data": 0
-        },
-        "docmia_fl": {
-          "type": "proposed",
-          "balanced_accuracy": 80.33,
-          "accuracy": 80.33,
-          "f1": 82.18,
-          "tpr_at_1_fpr": 3.33,
-          "tpr_at_3_fpr": 10.67,
-          "max_questions_per_document": 10,
-          "uses_auxiliary_data": 0
-        },
-        "docmia_fllora": {
-          "type": "proposed",
-          "balanced_accuracy": 80.0,
-          "accuracy": 80.0,
-          "f1": 81.93,
-          "tpr_at_1_fpr": 2.67,
-          "tpr_at_3_fpr": 5.33,
-          "max_questions_per_document": 10,
-          "uses_auxiliary_data": 0
-        },
-        "docmia_ig": {
-          "type": "proposed",
-          "balanced_accuracy": 80.33,
-          "accuracy": 80.33,
-          "f1": 82.34,
-          "tpr_at_1_fpr": 1.33,
-          "tpr_at_3_fpr": 8.0,
-          "max_questions_per_document": 10,
-          "uses_auxiliary_data": 0
-        }
+        "docmia_fl": {"type": "proposed", "balanced_accuracy": 80.33, "f1": 82.18, "tpr_at_1_fpr": 3.33, "tpr_at_3_fpr": 10.67},
+        "docmia_fllora": {"type": "proposed", "balanced_accuracy": 80.0, "f1": 81.93, "tpr_at_1_fpr": 2.67, "tpr_at_3_fpr": 5.33},
+        "docmia_ig": {"type": "proposed", "balanced_accuracy": 80.33, "f1": 82.34, "tpr_at_1_fpr": 1.33, "tpr_at_3_fpr": 8.0},
+        "loss_ta": {"type": "baseline", "balanced_accuracy": 51.83, "f1": 53.46, "tpr_at_1_fpr": 0.67, "tpr_at_3_fpr": 7.67},
+        "score_ua": {"type": "baseline", "balanced_accuracy": 75.97, "f1": 79.57, "tpr_at_1_fpr": 4.33, "tpr_at_3_fpr": 15.67},
+        "score_ua_all": {"type": "baseline", "balanced_accuracy": 80.5, "f1": 81.1, "tpr_at_1_fpr": 5.0, "tpr_at_3_fpr": 11.0},
+        "scoreloss_ua_all": {"type": "baseline", "balanced_accuracy": 80.5, "f1": 81.1, "tpr_at_1_fpr": 2.67, "tpr_at_3_fpr": 8.67},
+        "gradient_ua": {"type": "baseline", "balanced_accuracy": 77.17, "f1": 75.92, "tpr_at_1_fpr": 3.67, "tpr_at_3_fpr": 6.0}
+      }
+    },
+    "few_question_documents": {
+      "description": "The same attack decisions and scores restricted to candidate documents that carry at most 2 question-answer pairs (members were seen in training through at most 2 questions; non-members offer the attack equally little evidence). Paper reference: Table 18 (membership prediction accuracy on member documents with m = 1 and m = 2 training questions, Donut on DocVQA), pooled over m = 1 (51 documents) and m = 2 (60 documents).",
+      "weight": 0.25,
+      "primary_metric": "member_recall",
+      "_scaling_note": "Table 18 reports only the fraction of low-exposure member documents predicted as members (member_recall). That quantity alone is maximised by calling every document a member, so it is kept as the paper-comparable diagnostic (coefficient 0) and the subset is scored with balanced accuracy, F1 and TPR at 3% FPR, which also count the non-members.",
+      "metrics": {
+        "balanced_accuracy": {"higher_is_better": true, "coefficient": 1.0, "description": "Balanced accuracy on documents with at most 2 questions."},
+        "f1": {"higher_is_better": true, "coefficient": 1.0, "description": "Member-class F1 on documents with at most 2 questions."},
+        "tpr_at_3_fpr": {"higher_is_better": true, "coefficient": 0.5, "description": "True positive rate at <=3% false positive rate on documents with at most 2 questions."},
+        "member_recall": {"higher_is_better": true, "coefficient": 0.0, "description": "Diagnostic (paper Table 18 quantity): fraction of low-exposure member documents predicted as members."},
+        "roc_auc": {"higher_is_better": true, "coefficient": 0.0, "description": "Diagnostic only: threshold-free ranking quality on documents with at most 2 questions."}
+      },
+      "results": {
+        "docmia_fl": {"type": "proposed", "member_recall": 80.18},
+        "docmia_ig": {"type": "proposed", "member_recall": 63.06}
       }
     }
   }

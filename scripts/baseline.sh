@@ -1,41 +1,17 @@
 #!/bin/bash
-# Run a baseline method from the paper.
-#
-# Baselines are simple reference methods the paper compares against. 
-# Implement this only if applicable, i.e. the paper has baselines.
-# You do not need to implement all baselines to begin — 
-# just enough to validate that the evaluation pipeline works 
-# and provide a reference point. You can decide to expand more baselines later.
-# Each baseline must be actually run and scored through evaluate.sh
-# so the numbers are verified, not self-reported.
-# You can decide what this baseline script should do yourself.
-#
-# Usage:
-#   bash scripts/baseline.sh <name>
-
-set -e
-
-cd /home/user
-export PYTHONPATH=/home/user:${PYTHONPATH:-}
-
-python data/synthetic_docvqa.py
-if [ ! -e checkpoints/tiny_docvqa_target.pt ]; then
-  python method/train_target.py \
-    --data-dir data/synthetic_docvqa \
-    --checkpoint checkpoints/tiny_docvqa_target.pt \
-    --epochs "${DOCMIA_TARGET_EPOCHS:-45}"
-fi
-python method/docmia_attack.py \
-  --data-dir data/synthetic_docvqa \
-  --checkpoint checkpoints/tiny_docvqa_target.pt \
-  --output checkpoints/docmia_outputs.json \
-  --max-questions "${DOCMIA_MAX_QUESTIONS:-4}" \
-  --steps "${DOCMIA_FL_STEPS:-60}" \
-  --lr "${DOCMIA_FL_LR:-0.001}" \
-  --tau "${DOCMIA_FL_TAU:-0.00001}" \
-  --lora-rank "${DOCMIA_LORA_RANK:-4}" \
-  --lora-alpha "${DOCMIA_LORA_ALPHA:-4.0}" \
-  --ig-steps "${DOCMIA_IG_STEPS:-60}" \
-  --ig-lr "${DOCMIA_IG_LR:-0.001}" \
-  --ig-tau "${DOCMIA_IG_TAU:-0.00001}"
-bash scripts/evaluate.sh checkpoints/docmia_outputs.json
+# The paper's baselines (LOSS-TA, SCORE-UA, SCORE-UA_all, SCORELOSS-UA_all,
+# GRADIENT-UA) are computed by the evaluators themselves from the audited model,
+# so they are identical for every submission.  This prints them for the dev audit
+# from the latest scoring/scores.json (run scripts/evaluate.sh first).
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+[ -f scoring/scores.json ] || bash scripts/evaluate.sh
+python - <<'PY'
+import json
+scores = json.load(open("scoring/scores.json"))
+for exp, block in scores["experiments"].items():
+    print(exp)
+    for name, row in block.get("baselines", {}).items():
+        print(f"  {name:18s}", {k: round(v, 2) for k, v in row.items()})
+PY

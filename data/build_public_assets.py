@@ -18,6 +18,7 @@ for _var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
 
 import argparse
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -46,11 +47,14 @@ def main() -> None:
 
     pretrained = Path(args.pretrained)
     if not args.no_pretraining and (args.force or not pretrained.exists()):
-        info = build_pretrained(pretrained, json.loads(args.pretrain_overrides))
+        partial = pretrained.with_suffix(".partial")
+        info = build_pretrained(partial, json.loads(args.pretrain_overrides))
+        partial.rename(pretrained)
         pretrained.with_suffix(".json").write_text(json.dumps(info, indent=1), encoding="utf-8")
 
     dev = Path(args.dev_dir)
-    if args.force or not (dev / "target.pt").exists():
+    if args.force or not (dev / "target_stats.json").exists():  # written last: completion marker
+        shutil.rmtree(dev, ignore_errors=True)
         result = build_audit(args.dev_seed, dev, None if args.no_pretraining else pretrained,
                              json.loads(args.finetune_overrides))
         (dev / "labels.json").write_text(json.dumps(result["labels"], indent=1), encoding="utf-8")

@@ -43,10 +43,11 @@ def main() -> None:
     args = parser.parse_args()
     out = Path(args.out)
     audit = out / "audit"
-    if (audit / "target.pt").exists() and not args.force:
+    if (out / "audit_sha256.json").exists() and not args.force:  # written last: completion marker
         print("hidden audit already built")
         return
     shutil.rmtree(audit, ignore_errors=True)
+    (out / "audit_sha256.json").unlink(missing_ok=True)
     seed = (HERE / "secret_seed.txt").read_text(encoding="utf-8").strip()
     result = build_audit(f"hidden-test|{seed}", audit, args.pretrained, json.loads(args.finetune_overrides))
     (out / "audit_labels.json").write_text(json.dumps(result["labels"], indent=1), encoding="utf-8")
@@ -56,6 +57,7 @@ def main() -> None:
         str(p.relative_to(audit)): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in sorted(audit.rglob("*")) if p.is_file()
     }
+    hashes["../audit_labels.json"] = hashlib.sha256((out / "audit_labels.json").read_bytes()).hexdigest()
     (out / "audit_sha256.json").write_text(json.dumps(hashes, indent=1), encoding="utf-8")
     print(json.dumps(result["stats"], indent=1))
 

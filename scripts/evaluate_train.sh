@@ -1,19 +1,11 @@
 #!/bin/bash
-# Evaluate a document-membership artifact on the visible train slice.
-
-set -e
-
-cd /home/user
-export PYTHONPATH=/home/user:${PYTHONPATH:-}
-
-mkdir -p scoring
-
-INPUT="${1:-checkpoints/docmia_outputs.json}"
-if [ -d "$INPUT" ]; then
-  INPUT="$INPUT/docmia_outputs.json"
-fi
-DATA_DIR="${2:-data/synthetic_docvqa}"
-python eval/train/evaluate_docmia_slice.py \
-  --input "$INPUT" \
-  --data-dir "$DATA_DIR" \
-  --scores scoring/scores_train.json
+# Score the attack program (scripts/attack.sh) on the visible dev audit (train slice).
+#   bash scripts/evaluate_train.sh            -> scoring/scores_train.json
+# The evaluator runs the attack on a copy of data/dev_audit, computes the
+# baselines itself, and recomputes every metric from per-document outputs.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+export PYTHONPATH="$ROOT:${PYTHONPATH:-}"
+export DOCMIA_THREADS=${DOCMIA_THREADS:-1}
+python eval/train/evaluate.py ${DOCMIA_KEEP_OUTPUT:+--keep-output "$DOCMIA_KEEP_OUTPUT"}

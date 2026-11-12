@@ -235,3 +235,6 @@ core.[0-9]*
 !data/pretrained_reader.pt
 !data/dev_audit/target.pt
 !eval/test/audit/target.pt
+
+# Hardening step markers
+hardening/runs/.done_*

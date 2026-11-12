@@ -49,10 +49,10 @@ HIDDEN_LABELS = HERE / "audit_labels.json"
 HIDDEN_HASHES = HERE / "audit_sha256.json"
 
 SLOTS = ("docmia_fl", "docmia_fllora", "docmia_ig")
-RESERVED = {"loss_ta", "score_ua", "scoreloss_ua_all", "gradient_ua"}
+RESERVED = {"loss_ta", "score_ua", "score_ua_all", "scoreloss_ua_all", "gradient_ua"}
 EXPERIMENT_SPECS = (
     ("scaled_whitebox_docmia", None, ("balanced_accuracy", "f1", "roc_auc", "tpr_at_1_fpr", "tpr_at_3_fpr")),
-    ("few_question_documents", 2, ("balanced_accuracy", "f1", "roc_auc", "tpr_at_3_fpr")),
+    ("few_question_documents", 2, ("balanced_accuracy", "f1", "roc_auc", "tpr_at_3_fpr", "member_recall")),
 )
 
 
@@ -152,6 +152,7 @@ def baseline_attacks(audit: HiddenAudit) -> dict:
     return {
         "loss_ta": ((avg_loss <= avg_loss.mean()).astype(np.int64), -avg_loss),
         "score_ua": unsupervised(util_f[:, :1], 0, True),
+        "score_ua_all": unsupervised(util_f, 0, True),
         "scoreloss_ua_all": unsupervised(np.hstack([loss_f, util_f]), 0, False),
         "gradient_ua": unsupervised(np.hstack([grad_f, util_f]), 0, False),
     }
@@ -165,6 +166,7 @@ def score_rows(y: np.ndarray, decisions: np.ndarray, scores: np.ndarray, wanted)
         "roc_auc": roc_auc_score(y, scores),
         "tpr_at_1_fpr": tpr[fpr <= 0.01].max(),
         "tpr_at_3_fpr": tpr[fpr <= 0.03].max(),
+        "member_recall": decisions[y == 1].mean(),
     }
     return {m: float(100.0 * table[m]) for m in wanted}
 

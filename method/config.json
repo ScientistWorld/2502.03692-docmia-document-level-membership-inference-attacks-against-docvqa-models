@@ -1,0 +1,21 @@
+{
+ "max_steps": 200,
+ "kmeans_seed": 0,
+ "fl": {
+  "lr": 0.1,
+  "tau": 0.3
+ },
+ "fllora": {
+  "lr": 0.0001,
+  "tau": 0.001,
+  "rank": 4,
+  "alpha": 4.0,
+  "seed": 0
+ },
+ "ig": {
+  "lr": 0.01,
+  "tau": 0.1
+ },
+ "primary_variant": "fllora",
+ "selected_on": "dev audit (data/dev_audit), mean of balanced accuracy and F1"
+}

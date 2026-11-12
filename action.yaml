@@ -3,4 +3,4 @@ action: submit
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: "Hardening job 2 (resumable): build pretrained/dev/hidden audits, tune DocMIA on dev (paper grid), score reference on train+hidden test, replay variants and shortcuts, paired bootstrap, rank"
+notes: "Hardening job 2 (fixed 8-epoch target recipe): build dev/hidden audits, tune DocMIA on dev, score reference on train+hidden test, replay variants and shortcuts, bootstrap, rank"

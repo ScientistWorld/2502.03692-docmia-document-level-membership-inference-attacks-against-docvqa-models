@@ -1,0 +1,152 @@
+{
+  "experiments": {
+    "scaled_whitebox_docmia": {
+      "slice": "train",
+      "documents": 600,
+      "members": 300,
+      "results": {
+        "docmia_fl": {
+          "balanced_accuracy": 75.0,
+          "f1": 77.74480712166172,
+          "roc_auc": 83.07777777777777,
+          "tpr_at_1_fpr": 6.666666666666667,
+          "tpr_at_3_fpr": 31.0
+        },
+        "docmia_fllora": {
+          "balanced_accuracy": 61.66666666666667,
+          "f1": 68.4931506849315,
+          "roc_auc": 64.3888888888889,
+          "tpr_at_1_fpr": 3.0,
+          "tpr_at_3_fpr": 5.333333333333334
+        },
+        "docmia_ig": {
+          "balanced_accuracy": 73.33333333333334,
+          "f1": 76.04790419161677,
+          "roc_auc": 78.43555555555555,
+          "tpr_at_1_fpr": 0.6666666666666667,
+          "tpr_at_3_fpr": 4.333333333333334
+        }
+      },
+      "baselines": {
+        "loss_ta": {
+          "balanced_accuracy": 75.16666666666667,
+          "f1": 79.83761840324763,
+          "roc_auc": 85.93111111111111,
+          "tpr_at_1_fpr": 1.6666666666666667,
+          "tpr_at_3_fpr": 6.333333333333334
+        },
+        "score_ua": {
+          "balanced_accuracy": 72.16666666666667,
+          "f1": 77.5235531628533,
+          "roc_auc": 82.17111111111112,
+          "tpr_at_1_fpr": 0.0,
+          "tpr_at_3_fpr": 0.0
+        },
+        "score_ua_all": {
+          "balanced_accuracy": 69.66666666666667,
+          "f1": 75.98944591029023,
+          "roc_auc": 82.17111111111112,
+          "tpr_at_1_fpr": 0.0,
+          "tpr_at_3_fpr": 0.0
+        },
+        "scoreloss_ua_all": {
+          "balanced_accuracy": 66.83333333333333,
+          "f1": 74.84197218710493,
+          "roc_auc": 84.89333333333332,
+          "tpr_at_1_fpr": 5.666666666666666,
+          "tpr_at_3_fpr": 11.666666666666666
+        },
+        "gradient_ua": {
+          "balanced_accuracy": 71.0,
+          "f1": 76.98412698412699,
+          "roc_auc": 88.25444444444443,
+          "tpr_at_1_fpr": 8.0,
+          "tpr_at_3_fpr": 34.0
+        }
+      },
+      "attack_status": {
+        "failure": null,
+        "slots": {
+          "docmia_fl": "ok",
+          "docmia_fllora": "ok",
+          "docmia_ig": "ok"
+        },
+        "other": {}
+      }
+    },
+    "few_question_documents": {
+      "slice": "train",
+      "documents": 255,
+      "members": 130,
+      "results": {
+        "docmia_fl": {
+          "balanced_accuracy": 71.93846153846154,
+          "f1": 75.26132404181185,
+          "roc_auc": 76.88000000000001,
+          "tpr_at_3_fpr": 23.076923076923077,
+          "member_recall": 83.07692307692308
+        },
+        "docmia_fllora": {
+          "balanced_accuracy": 56.52307692307692,
+          "f1": 63.576158940397356,
+          "roc_auc": 55.80307692307692,
+          "tpr_at_3_fpr": 1.5384615384615385,
+          "member_recall": 73.84615384615385
+        },
+        "docmia_ig": {
+          "balanced_accuracy": 68.76923076923077,
+          "f1": 72.85223367697594,
+          "roc_auc": 72.61538461538461,
+          "tpr_at_3_fpr": 2.307692307692308,
+          "member_recall": 81.53846153846153
+        }
+      },
+      "baselines": {
+        "loss_ta": {
+          "balanced_accuracy": 68.07692307692308,
+          "f1": 75.75757575757575,
+          "roc_auc": 77.29846153846154,
+          "tpr_at_3_fpr": 4.615384615384616,
+          "member_recall": 96.15384615384616
+        },
+        "score_ua": {
+          "balanced_accuracy": 68.95384615384616,
+          "f1": 75.47169811320755,
+          "roc_auc": 69.47384615384615,
+          "tpr_at_3_fpr": 0.0,
+          "member_recall": 92.3076923076923
+        },
+        "score_ua_all": {
+          "balanced_accuracy": 68.95384615384616,
+          "f1": 75.47169811320755,
+          "roc_auc": 69.47384615384615,
+          "tpr_at_3_fpr": 0.0,
+          "member_recall": 92.3076923076923
+        },
+        "scoreloss_ua_all": {
+          "balanced_accuracy": 64.84615384615384,
+          "f1": 74.26900584795322,
+          "roc_auc": 72.73846153846154,
+          "tpr_at_3_fpr": 4.615384615384616,
+          "member_recall": 97.6923076923077
+        },
+        "gradient_ua": {
+          "balanced_accuracy": 69.32307692307693,
+          "f1": 76.01246105919003,
+          "roc_auc": 77.34769230769231,
+          "tpr_at_3_fpr": 16.153846153846153,
+          "member_recall": 93.84615384615384
+        }
+      },
+      "attack_status": {
+        "failure": null,
+        "slots": {
+          "docmia_fl": "ok",
+          "docmia_fllora": "ok",
+          "docmia_ig": "ok"
+        },
+        "other": {}
+      }
+    }
+  }
+}

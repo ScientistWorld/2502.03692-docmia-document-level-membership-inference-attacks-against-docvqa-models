@@ -37,5 +37,10 @@
 - Rechecked the final workspace and tightened `scripts/reproduce.sh` so the
   end-to-end entrypoint explicitly refreshes all scoring artifacts.
 
+### [2026-11-12] - secondary_claims (hardening iteration)
+- Rebuilt the gym around a hidden audit: secret-seeded private set, its own fine-tuned target, labels and hashes only in eval/test; the hidden test runs the submitted attack program and recomputes every metric; baselines computed by the evaluator; one ranked `membership_attack` row with worst values on failure.
+- Restored the paper's protocol at small scale: public pre-trained reader fine-tuned on private documents (member/non-member QA 97%/60%), Algorithm 1 with S=200, Adam, Appendix C lr/tau grid on the dev audit, Phi_all + KMeans, FLLoRA starting at the target; 600+600 candidates per audit.
+- Hidden test: DocMIA (FLLoRA, dev-selected) BA 76.7 / F1 80.1 / TPR@3%FPR 14.7; beats SCORELOSS-UA_all and score baselines, ties LOSS-TA on BA/F1 while beating it at low FPR, ties GRADIENT-UA. Ablations significantly worse; all REDTEAM shortcuts closed. See HARDENING.md.
+
 ## Stop Justification
 - Completed at milestone `secondary_claims`.

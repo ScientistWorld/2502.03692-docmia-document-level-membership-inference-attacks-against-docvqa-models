@@ -19,11 +19,15 @@ every metric.  Extra attacks in the output are scored as additional rows.
 
 from __future__ import annotations
 
+import os
+
+for _var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+    os.environ.setdefault(_var, os.environ.get("DOCMIA_THREADS", "1"))
+
 import argparse
 import hashlib
 import json
 import math
-import os
 import shlex
 import shutil
 import subprocess
@@ -273,10 +277,7 @@ def main() -> None:
     parser.add_argument("--keep-output", default=None)
     parser.add_argument("--timeout", type=float, default=4 * 3600)
     args = parser.parse_args()
-    try:
-        cores = len(os.sched_getaffinity(0))
-    except AttributeError:
-        cores = os.cpu_count() or 1
+    cores = int(os.environ.get("DOCMIA_THREADS", "1") or 1)
     torch.set_num_threads(max(1, cores))
     (ROOT / "tmp").mkdir(exist_ok=True)
     out = Path(args.scores)

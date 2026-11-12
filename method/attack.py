@@ -9,9 +9,13 @@ training document) and one binary membership decision per candidate document.
 
 from __future__ import annotations
 
+import os
+
+for _var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+    os.environ.setdefault(_var, os.environ.get("DOCMIA_THREADS", "1"))
+
 import argparse
 import json
-import os
 import sys
 import time
 from pathlib import Path
@@ -54,12 +58,25 @@ def load_config(path: str | Path | None) -> dict:
     return config
 
 
-def set_threads() -> None:
+def cpu_budget() -> int:
+    """CPUs actually granted to this job: DOCMIA_THREADS, else the cgroup quota, else 1.
+
+    Job nodes expose more cores than a job is allotted; letting torch/OpenMP use
+    every visible core oversubscribes the quota and slows everything ~100x.
+    """
+    if os.environ.get("DOCMIA_THREADS"):
+        return max(1, int(os.environ["DOCMIA_THREADS"]))
     try:
-        n = len(os.sched_getaffinity(0))
-    except AttributeError:
-        n = os.cpu_count() or 1
-    torch.set_num_threads(max(1, n))
+        quota, period = Path("/sys/fs/cgroup/cpu.max").read_text().split()[:2]
+        if quota != "max":
+            return max(1, int(quota) // int(period))
+    except (OSError, ValueError):
+        pass
+    return 1
+
+
+def set_threads() -> None:
+    torch.set_num_threads(cpu_budget())
 
 
 def run(audit_dir: str | Path, config: dict, variants=("fl", "fllora", "ig"), log=print) -> dict:

@@ -9,6 +9,11 @@ Here the search runs on the dev audit only; the selected setting is written to
 
 from __future__ import annotations
 
+import os
+
+for _var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+    os.environ.setdefault(_var, os.environ.get("DOCMIA_THREADS", "1"))
+
 import argparse
 import json
 import sys

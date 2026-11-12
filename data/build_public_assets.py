@@ -11,6 +11,11 @@ The hidden test audit uses the same recipe with a secret seed (``eval/test``).
 
 from __future__ import annotations
 
+import os
+
+for _var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+    os.environ.setdefault(_var, os.environ.get("DOCMIA_THREADS", "1"))
+
 import argparse
 import json
 import sys
@@ -37,7 +42,7 @@ def main() -> None:
     parser.add_argument("--no-pretraining", action="store_true")
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
-    torch.set_num_threads(max(1, torch.get_num_threads()))
+    torch.set_num_threads(max(1, int(__import__("os").environ.get("DOCMIA_THREADS", "1") or 1)))
 
     pretrained = Path(args.pretrained)
     if not args.no_pretraining and (args.force or not pretrained.exists()):

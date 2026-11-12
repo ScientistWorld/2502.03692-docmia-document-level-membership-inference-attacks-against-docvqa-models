@@ -1,4 +1,4 @@
 action: submit
 gpus: 0
 test: false
-notes: "Bundled benchmark audit: reference, three fixed-target seeds, two pipeline seeds, stronger/weaker variants, and sixteen artifact/data/constraint shortcuts; all hidden tests run with no arguments."
+notes: "Two short audit follow-ups: score the train-selected loss rule while preserving both baselines, and hide an all-nonmember failed attack with an empty train method list. Recompute audit-population ranks."

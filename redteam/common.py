@@ -193,11 +193,15 @@ def construct(name, folder):
         payload.pop('membership_predictions')
         payload['membership_scores'] = {method: [0.0] * n for method in METHODS}
         return payload
-    if name in ['shortcut_empty_results', 'shortcut_omit_methods']:
+    if name == 'shortcut_empty_results':
+        # Deliberately fail the task, then erase every requested method from the
+        # editable visible-score file. The hidden evaluator checks nonemptiness
+        # before applying this list, and never checks it afterwards.
+        return prediction_payload([0] * n, budget=4)
+    if name == 'shortcut_omit_methods':
         payload = reference()
-        if name == 'shortcut_omit_methods':
-            payload['membership_predictions'] = {'docmia_fl': [0] * n,
-                                                 'shortcut_unreported_on_disk': [1] * n}
+        payload['membership_predictions'] = {'docmia_fl': [0] * n,
+                                             'shortcut_unreported_on_disk': [1] * n}
         return payload
     raise ValueError(name)
 
@@ -235,13 +239,18 @@ def train_selected(folder):
     chosen = max(training['results'].items(), key=quality)[0]
     write(folder / 'selection.json', {'chosen': chosen, 'development_objective': quality((chosen, training['results'][chosen])),
                                      'candidate_count': len(training['results'])})
-    answer = {'metadata': copy.deepcopy(payload['metadata']), 'features': {'doc_ids': features['doc_ids']}}
+    # Preserve both comparison baselines. Only replace the three proposed
+    # attack slots with the selected, honestly different inference rule.
+    proposed = ['docmia_fl', 'docmia_fllora', 'docmia_ig']
+    answer = {'metadata': copy.deepcopy(payload['metadata']), 'features': {
+        'doc_ids': features['doc_ids'], 'score_ua': features['score_ua'],
+        'gradient_ua': features['gradient_ua']}}
     if chosen in candidates['features']:
-        answer['features'].update({method: candidates['features'][chosen] for method in METHODS})
+        answer['features'].update({method: candidates['features'][chosen] for method in proposed})
         low = candidates['metadata']['member_is_low_signal'][chosen]
-        answer['metadata']['member_is_low_signal'] = {method: low for method in METHODS}
+        answer['metadata']['member_is_low_signal'] = {method: low for method in proposed}
     else:
-        answer['membership_scores'] = {method: candidates['membership_scores'][chosen] for method in METHODS}
+        answer['membership_scores'] = {method: candidates['membership_scores'][chosen] for method in proposed}
     return answer
 
 

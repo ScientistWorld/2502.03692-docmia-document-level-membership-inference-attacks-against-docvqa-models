@@ -36,8 +36,8 @@ ANSWER_INDEX = {answer: i for i, answer in enumerate(ANSWER_BANK)}
 
 PRETRAIN_RECIPE = {
     "seed": "docmia-public-pretraining-corpus-v1",
-    "documents": 1500,
-    "epochs": 8,
+    "documents": 3000,
+    "epochs": 25,
     "lr": 1e-3,
     "batch_docs": 32,
 }

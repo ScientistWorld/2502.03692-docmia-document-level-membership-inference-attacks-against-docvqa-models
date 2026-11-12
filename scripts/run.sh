@@ -15,5 +15,5 @@ python -c "import torch, numpy, sklearn, PIL; print('[run] torch', torch.__versi
 if [ ! -f hardening/exploration/smoke.done ]; then
   python hardening/smoke.py 2>&1 | tee hardening/exploration/smoke.log && touch hardening/exploration/smoke.done
 fi
-python hardening/explore.py P_es S_es P_long P_small 2>&1 | tee -a hardening/exploration/explore.log
+python hardening/explore.py P_es P_weak P_long S_es 2>&1 | tee -a hardening/exploration/explore.log
 echo "[run] done"

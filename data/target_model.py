@@ -1,6 +1,7 @@
 """Architecture of the audited DocVQA model (a problem asset, not a method).
 
-A compact OCR-free document QA model: a convolutional page encoder, a question
+A compact OCR-free document QA model: a convolutional page encoder (with batch
+normalisation, operating on ink-positive pages), a question
 embedding, a fusion MLP, and a final answer projection layer (the analogue of
 the vocabulary projection layer of Donut / VT5 / Pix2Struct).  Answers are
 predicted over a closed answer bank.
@@ -18,9 +19,9 @@ class TinyDocVQA(nn.Module):
     def __init__(self, num_questions: int, num_answers: int, hidden: int = 128) -> None:
         super().__init__()
         self.page_encoder = nn.Sequential(
-            nn.Conv2d(1, 8, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(8, 16, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(1, 8, 3, padding=1), nn.BatchNorm2d(8), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(8, 16, 3, padding=1), nn.BatchNorm2d(16), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(16, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(), nn.MaxPool2d(2),
             nn.Flatten(),
         )
         page_dim = 32 * (IMAGE_H // 8) * (IMAGE_W // 8)
@@ -32,7 +33,8 @@ class TinyDocVQA(nn.Module):
         self.output_layer = nn.Linear(hidden, num_answers)
 
     def encode_page(self, page: torch.Tensor) -> torch.Tensor:
-        return self.page_encoder(page)
+        """Pages are grayscale in [0, 1] with white paper; ink is made positive first."""
+        return self.page_encoder(1.0 - page)
 
     def hidden_state(self, page_features: torch.Tensor, question_idx: torch.Tensor) -> torch.Tensor:
         return self.fusion(torch.cat([page_features, self.question_embedding(question_idx)], dim=1))

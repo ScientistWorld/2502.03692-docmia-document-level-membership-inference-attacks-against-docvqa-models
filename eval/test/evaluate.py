@@ -65,10 +65,10 @@ class HiddenTarget(nn.Module):
 
     def __init__(self, state: dict) -> None:
         super().__init__()
-        widths = [state[f"page_encoder.{k}.weight"].shape[0] for k in (0, 3, 6)]
+        widths = [state[f"page_encoder.{k}.weight"].shape[0] for k in (0, 4, 8)]
         layers, prev = [], 1
         for width in widths:
-            layers += [nn.Conv2d(prev, width, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2)]
+            layers += [nn.Conv2d(prev, width, 3, padding=1), nn.BatchNorm2d(width), nn.ReLU(), nn.MaxPool2d(2)]
             prev = width
         self.page_encoder = nn.Sequential(*layers, nn.Flatten())
         self.question_embedding = nn.Embedding(*state["question_embedding.weight"].shape)
@@ -80,7 +80,8 @@ class HiddenTarget(nn.Module):
         self.eval()
 
     def head(self, pages: torch.Tensor, questions: torch.Tensor):
-        hidden = self.fusion(torch.cat([self.page_encoder(pages), self.question_embedding(questions)], 1))
+        ink = 1.0 - pages  # white-paper pages in [0, 1] are fed ink-positive
+        hidden = self.fusion(torch.cat([self.page_encoder(ink), self.question_embedding(questions)], 1))
         return hidden, self.output_layer(hidden)
 
 

@@ -59,11 +59,11 @@ class DevReader(nn.Module):
 
     def __init__(self, state: dict) -> None:
         super().__init__()
-        c1, c2, c3 = (state[f"page_encoder.{i}.weight"].shape[0] for i in (0, 3, 6))
+        c1, c2, c3 = (state[f"page_encoder.{i}.weight"].shape[0] for i in (0, 4, 8))
         self.page_encoder = nn.Sequential(
-            nn.Conv2d(1, c1, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(c1, c2, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(c2, c3, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(1, c1, 3, padding=1), nn.BatchNorm2d(c1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(c1, c2, 3, padding=1), nn.BatchNorm2d(c2), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(c2, c3, 3, padding=1), nn.BatchNorm2d(c3), nn.ReLU(), nn.MaxPool2d(2),
             nn.Flatten(),
         )
         q_num, q_dim = state["question_embedding.weight"].shape
@@ -74,6 +74,10 @@ class DevReader(nn.Module):
         self.output_layer = nn.Linear(hidden, state["output_layer.weight"].shape[0])
         self.load_state_dict(state)
         self.eval()
+
+    def hidden(self, pages: torch.Tensor, questions: torch.Tensor) -> torch.Tensor:
+        feats = self.page_encoder(1.0 - pages)  # pages are white paper in [0, 1]; ink-positive input
+        return self.fusion(torch.cat([feats, self.question_embedding(questions)], 1))
 
 
 def _load_audit(audit_dir: Path) -> dict:
@@ -126,7 +130,7 @@ def _baselines(audit: dict) -> dict:
     for start in range(0, len(audit["pair_doc"]), 256):
         sl = slice(start, start + 256)
         pages = audit["pages"][torch.from_numpy(audit["pair_doc"][sl])]
-        h = model.fusion(torch.cat([model.page_encoder(pages), model.question_embedding(audit["pair_q"][sl])], 1))
+        h = model.hidden(pages, audit["pair_q"][sl])
         logits = model.output_layer(h)
         a = audit["pair_a"][sl]
         losses.append(nn.functional.cross_entropy(logits, a, reduction="none"))

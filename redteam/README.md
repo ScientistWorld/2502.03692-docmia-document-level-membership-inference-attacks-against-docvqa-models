@@ -21,3 +21,9 @@ All names beginning `shortcut_` are shortcuts, including tied results. A failed
 forgery is recorded as a failed shortcut, not credited for leftover scores.
 The final report documents ranking normalization and the limits of estimates
 when the population of future ranked attempts is unknown.
+
+Read `../REDTEAM.md` for the audit conclusion and per-shortcut verdicts.
+`ranking.json` contains all normalized contributions and raw scale estimates;
+`audit_summary.json` contains the reference values and three-seed ranges.
+Run `python3 redteam/check_evidence.py` for a lightweight consistency check of
+the saved results. It does not train a model or invoke an evaluator.

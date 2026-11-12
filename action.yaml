@@ -1,4 +1,2 @@
-action: submit
-gpus: 0
-test: false
-notes: "Two short audit follow-ups: score the train-selected loss rule while preserving both baselines, and hide an all-nonmember failed attack with an empty train method list. Recompute audit-population ranks."
+action: done
+notes: "Audit complete: 25 cases, three fixed-target seeds, genuine improvement and degradation checked, nine paying shortcuts documented; gym files restored."

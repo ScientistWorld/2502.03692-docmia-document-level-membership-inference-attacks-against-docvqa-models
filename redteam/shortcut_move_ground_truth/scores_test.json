@@ -1,0 +1,84 @@
+{
+  "experiments": {
+    "scaled_whitebox_docmia": {
+      "slice": "test",
+      "results": {
+        "score_ua": {
+          "balanced_accuracy": 100.0,
+          "accuracy": 100.0,
+          "f1": 100.0,
+          "matthews_corrcoef": 100.0,
+          "roc_auc": 100.0,
+          "average_precision": 100.0,
+          "tpr_at_1_fpr": 100.0,
+          "tpr_at_3_fpr": 100.0,
+          "predicted_member_rate_imbalance": 0.0,
+          "max_questions_per_document": 0.0,
+          "uses_auxiliary_data": 0.0,
+          "constraint_metadata_missing": 0.0,
+          "label_copy_suspect": 1.0
+        },
+        "gradient_ua": {
+          "balanced_accuracy": 100.0,
+          "accuracy": 100.0,
+          "f1": 100.0,
+          "matthews_corrcoef": 100.0,
+          "roc_auc": 100.0,
+          "average_precision": 100.0,
+          "tpr_at_1_fpr": 100.0,
+          "tpr_at_3_fpr": 100.0,
+          "predicted_member_rate_imbalance": 0.0,
+          "max_questions_per_document": 0.0,
+          "uses_auxiliary_data": 0.0,
+          "constraint_metadata_missing": 0.0,
+          "label_copy_suspect": 1.0
+        },
+        "docmia_fl": {
+          "balanced_accuracy": 100.0,
+          "accuracy": 100.0,
+          "f1": 100.0,
+          "matthews_corrcoef": 100.0,
+          "roc_auc": 100.0,
+          "average_precision": 100.0,
+          "tpr_at_1_fpr": 100.0,
+          "tpr_at_3_fpr": 100.0,
+          "predicted_member_rate_imbalance": 0.0,
+          "max_questions_per_document": 0.0,
+          "uses_auxiliary_data": 0.0,
+          "constraint_metadata_missing": 0.0,
+          "label_copy_suspect": 1.0
+        },
+        "docmia_fllora": {
+          "balanced_accuracy": 100.0,
+          "accuracy": 100.0,
+          "f1": 100.0,
+          "matthews_corrcoef": 100.0,
+          "roc_auc": 100.0,
+          "average_precision": 100.0,
+          "tpr_at_1_fpr": 100.0,
+          "tpr_at_3_fpr": 100.0,
+          "predicted_member_rate_imbalance": 0.0,
+          "max_questions_per_document": 0.0,
+          "uses_auxiliary_data": 0.0,
+          "constraint_metadata_missing": 0.0,
+          "label_copy_suspect": 1.0
+        },
+        "docmia_ig": {
+          "balanced_accuracy": 100.0,
+          "accuracy": 100.0,
+          "f1": 100.0,
+          "matthews_corrcoef": 100.0,
+          "roc_auc": 100.0,
+          "average_precision": 100.0,
+          "tpr_at_1_fpr": 100.0,
+          "tpr_at_3_fpr": 100.0,
+          "predicted_member_rate_imbalance": 0.0,
+          "max_questions_per_document": 0.0,
+          "uses_auxiliary_data": 0.0,
+          "constraint_metadata_missing": 0.0,
+          "label_copy_suspect": 1.0
+        }
+      }
+    }
+  }
+}

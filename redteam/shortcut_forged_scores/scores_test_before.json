@@ -1,0 +1,43 @@
+{
+  "experiments": {
+    "scaled_whitebox_docmia": {
+      "results": {
+        "score_ua": {
+          "f1": 100,
+          "accuracy": 100,
+          "balanced_accuracy": 100,
+          "tpr_at_1_fpr": 100,
+          "tpr_at_3_fpr": 100
+        },
+        "gradient_ua": {
+          "f1": 100,
+          "accuracy": 100,
+          "balanced_accuracy": 100,
+          "tpr_at_1_fpr": 100,
+          "tpr_at_3_fpr": 100
+        },
+        "docmia_fl": {
+          "f1": 100,
+          "accuracy": 100,
+          "balanced_accuracy": 100,
+          "tpr_at_1_fpr": 100,
+          "tpr_at_3_fpr": 100
+        },
+        "docmia_fllora": {
+          "f1": 100,
+          "accuracy": 100,
+          "balanced_accuracy": 100,
+          "tpr_at_1_fpr": 100,
+          "tpr_at_3_fpr": 100
+        },
+        "docmia_ig": {
+          "f1": 100,
+          "accuracy": 100,
+          "balanced_accuracy": 100,
+          "tpr_at_1_fpr": 100,
+          "tpr_at_3_fpr": 100
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "experiments": {
+    "scaled_whitebox_docmia": {
+      "slice": "test",
+      "results": {}
+    }
+  }
+}

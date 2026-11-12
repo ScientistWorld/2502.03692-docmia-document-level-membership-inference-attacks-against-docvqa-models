@@ -1,0 +1,8 @@
+{
+  "experiments": {
+    "scaled_whitebox_docmia": {
+      "results": {},
+      "calibration": {}
+    }
+  }
+}

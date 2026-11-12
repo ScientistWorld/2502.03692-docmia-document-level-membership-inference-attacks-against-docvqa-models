@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/home/user/eval/train/evaluate_docmia_slice.py", line 299, in <module>
+    main()
+  File "/home/user/eval/train/evaluate_docmia_slice.py", line 291, in main
+    scores = evaluate(Path(args.input), Path(args.data_dir), Path(args.slice_doc_ids))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/eval/train/evaluate_docmia_slice.py", line 278, in evaluate
+    raise ValueError("No compatible per-document methods were found in the input artifact")
+ValueError: No compatible per-document methods were found in the input artifact

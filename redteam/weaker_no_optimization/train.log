@@ -1,0 +1,85 @@
+{
+  "experiments": {
+    "scaled_whitebox_docmia": {
+      "slice": "train",
+      "results": {
+        "score_ua": {
+          "balanced_accuracy": 66.25,
+          "accuracy": 66.25,
+          "f1": 63.013698630136986,
+          "matthews_corrcoef": 33.00938654773666,
+          "roc_auc": 65.9375,
+          "average_precision": 68.52955212302969,
+          "tpr_at_1_fpr": 7.5,
+          "tpr_at_3_fpr": 25.0,
+          "predicted_member_rate_imbalance": 8.750000000000002,
+          "max_questions_per_document": 4.0,
+          "uses_auxiliary_data": 0.0,
+          "constraint_metadata_missing": 0.0,
+          "label_copy_suspect": 0.0
+        },
+        "gradient_ua": {
+          "balanced_accuracy": 62.5,
+          "accuracy": 62.5,
+          "f1": 61.53846153846154,
+          "matthews_corrcoef": 25.031308716087945,
+          "roc_auc": 57.1875,
+          "average_precision": 56.67190157897407,
+          "tpr_at_1_fpr": 2.5,
+          "tpr_at_3_fpr": 2.5,
+          "predicted_member_rate_imbalance": 2.500000000000002,
+          "max_questions_per_document": 4.0,
+          "uses_auxiliary_data": 0.0,
+          "constraint_metadata_missing": 0.0,
+          "label_copy_suspect": 0.0
+        },
+        "docmia_fl": {
+          "balanced_accuracy": 66.25,
+          "accuracy": 66.25,
+          "f1": 63.013698630136986,
+          "matthews_corrcoef": 33.00938654773666,
+          "roc_auc": 65.9375,
+          "average_precision": 68.52955212302969,
+          "tpr_at_1_fpr": 7.5,
+          "tpr_at_3_fpr": 25.0,
+          "predicted_member_rate_imbalance": 8.750000000000002,
+          "max_questions_per_document": 4.0,
+          "uses_auxiliary_data": 0.0,
+          "constraint_metadata_missing": 0.0,
+          "label_copy_suspect": 0.0
+        },
+        "docmia_fllora": {
+          "balanced_accuracy": 66.25,
+          "accuracy": 66.25,
+          "f1": 63.013698630136986,
+          "matthews_corrcoef": 33.00938654773666,
+          "roc_auc": 65.9375,
+          "average_precision": 68.52955212302969,
+          "tpr_at_1_fpr": 7.5,
+          "tpr_at_3_fpr": 25.0,
+          "predicted_member_rate_imbalance": 8.750000000000002,
+          "max_questions_per_document": 4.0,
+          "uses_auxiliary_data": 0.0,
+          "constraint_metadata_missing": 0.0,
+          "label_copy_suspect": 0.0
+        },
+        "docmia_ig": {
+          "balanced_accuracy": 66.25,
+          "accuracy": 66.25,
+          "f1": 63.013698630136986,
+          "matthews_corrcoef": 33.00938654773666,
+          "roc_auc": 65.9375,
+          "average_precision": 68.52955212302969,
+          "tpr_at_1_fpr": 7.5,
+          "tpr_at_3_fpr": 25.0,
+          "predicted_member_rate_imbalance": 8.750000000000002,
+          "max_questions_per_document": 4.0,
+          "uses_auxiliary_data": 0.0,
+          "constraint_metadata_missing": 0.0,
+          "label_copy_suspect": 0.0
+        }
+      },
+      "calibration": {}
+    }
+  }
+}

@@ -238,3 +238,9 @@ core.[0-9]*
 
 # Hardening step markers
 hardening/runs/.done_*
+
+# Hardening evidence (exceptions to the generic runs/ rule above)
+!hardening/runs/
+!hardening/archive_job2/runs/
+!eval/test/runs/
+hardening/runs/.done_*

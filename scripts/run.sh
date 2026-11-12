@@ -43,7 +43,7 @@ variant() {
 }
 shortcut() {
   python eval/test/evaluate.py --attack-cmd "python hardening/shortcuts.py $1" \
-    --scores $RUNS/shortcut_$1/scores_test.json
+    --scores $RUNS/shortcut_$1/scores_test.json --keep-output eval/test/runs/$1.json
   local rc=$?
   restore
   return $rc
@@ -53,6 +53,7 @@ bootstrap() {
   for v in loss_threshold loss_dev_threshold gradient_ua calibrated_loss weaker_no_opt weaker_one_step calibrated_kmeans stronger_calibrated; do
     [ -f eval/test/runs/$v.json ] && args+=(--candidate "$v=eval/test/runs/$v.json")
   done
+  [ -f eval/test/runs/shadow_lira.json ] && args+=(--candidate "shadow_lira=eval/test/runs/shadow_lira.json")
   python eval/test/paired_bootstrap.py --reference eval/test/runs/reference.json "${args[@]}" \
     --out hardening/paired_bootstrap_test.json
 }
@@ -68,7 +69,7 @@ step eval_test eval_test
 for v in loss_threshold weaker_no_opt loss_dev_threshold gradient_ua calibrated_loss; do step var_$v variant $v; done
 for s in empty_output empty_results omit_methods constant_one manifest_labels filename_labels \
          bruteforce_generator move_ground_truth forged_scores threshold_override nan_scores \
-         nonbinary_predictions read_hidden_labels; do
+         nonbinary_predictions read_hidden_labels shadow_lira; do
   step sc_$s shortcut $s
 done
 step var_weaker_one_step variant weaker_one_step

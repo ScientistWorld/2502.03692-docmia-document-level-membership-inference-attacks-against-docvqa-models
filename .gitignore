@@ -230,3 +230,8 @@ tmp/
 protocol.md
 *.egg-info
 core.[0-9]*
+
+# Small committed gym assets (exceptions to the *.pt rule above)
+!data/pretrained_reader.pt
+!data/dev_audit/target.pt
+!eval/test/audit/target.pt

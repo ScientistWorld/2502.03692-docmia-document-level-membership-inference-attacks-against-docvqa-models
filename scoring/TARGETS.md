@@ -1,14 +1,29 @@
 # Evaluation Targets
 
-## Primary: scaled_whitebox_docmia
+## Primary: scaled_whitebox_docmia (weight 1.0)
 
-Tests whether a document-level membership inference system can distinguish
-training documents from held-out documents in a balanced DocVQA-style setting.
+Document-level, auxiliary-data-free membership inference against a white-box
+document QA model, on a balanced candidate set.
 
-- **Metric**: `f1` (higher is better)
-- **Secondary metrics**: `balanced_accuracy`, `accuracy`, `tpr_at_1_fpr`, `tpr_at_3_fpr` (higher is better)
-- **Constraint metrics**: `max_questions_per_document`, `uses_auxiliary_data` (lower is better)
-- **How to run**: `bash scripts/reproduce.sh`, or run a compatible method that writes a document-level membership artifact and then call `bash scripts/evaluate.sh <artifact>`.
-- **Expected output**: a JSON artifact with one or more named methods under
-  `features`, `membership_scores`, or `membership_predictions`; each method
-  must provide one row per document in the benchmark manifest.
+- **Ranked row:** `membership_attack`, the attack the submission's
+  `scripts/attack.sh` writes under that name.
+- **Headline metric:** `f1` (higher is better).
+- **Other ranked metrics:** `balanced_accuracy`, `tpr_at_1_fpr`, `tpr_at_3_fpr`
+  (higher is better). Coefficients are 1.0, 0.4 and 1.0, with 1.0 for F1.
+- **Diagnostic only:** `roc_auc`; unranked per-attack rows (`other_attacks`);
+  the evaluator's baselines (`baselines`); and metrics on documents with at
+  most two question-answer pairs (`diagnostics`).
+- **Constraints, enforced as validity or compliance rather than ranked:**
+  - The attack sees only the target weights and the unlabeled candidates, with
+    their question-answer pairs, so the question budget is structural.
+  - Invalid or missing outputs score 0 on every metric.
+  - No auxiliary documents and no shadow or reference models trained on
+    documents (see CONSTRAINTS.md).
+- **How to run:**
+  - `bash scripts/evaluate_train.sh` scores the visible dev audit and writes
+    `scoring/scores_train.json`.
+  - `bash scripts/evaluate_test.sh` runs the hidden test (no arguments) and
+    writes `scoring/scores_test.json`.
+  - `bash scripts/reproduce.sh` reproduces the reference end to end.
+- **Expected output:** see `briefing/evaluation.md` for the attack output
+  format.

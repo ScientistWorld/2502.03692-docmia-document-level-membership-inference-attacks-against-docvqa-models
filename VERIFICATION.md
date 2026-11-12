@@ -1,3 +1,5 @@
+> **Superseded (hardening iteration, 2026-11-12):** the synthetic dataset, target, evaluators and scores described below were replaced. See HARDENING.md and briefing/ for the current gym.
+
 # Verification Report
 
 ## Initial Assessment

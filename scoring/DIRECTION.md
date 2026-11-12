@@ -2,25 +2,35 @@
 
 ## Research Problem
 
-This benchmark studies document-level membership inference against document
-visual question answering models. The scientific question is how to infer
-whether a whole document was in training when each document has multiple
-question-answer observations.
+This gym studies document-level membership inference against document visual
+question answering models. The question is how to tell, from a model's
+weights alone, whether a whole document was in its training data, when each
+document is represented by one to five question-answer pairs.
 
 ## Approach Scope
 
-Methods should remain in the DocVQA membership-inference family. They may
-use the target model, the target documents, and the provided question-answer
-pairs to produce document-level membership scores or predictions. Improvements
-should focus on stronger evidence extraction, aggregation across questions,
-calibration, and low-FPR decision rules while respecting the same data access
-and query constraints.
+Methods stay in the white-box, auxiliary-data-free membership-inference
+family. They may use:
+
+- the target model's weights;
+- the candidate documents and their question-answer pairs;
+- the public checkpoint the target was fine-tuned from;
+- the labelled dev audit, for development.
+
+Promising directions:
+
+- more informative per-question evidence;
+- better aggregation across a document's questions;
+- calibration of per-question evidence for question and document difficulty;
+- decision rules and membership scores that hold up at low false positive
+  rates.
 
 ## Out of Bounds
 
-- Changing the task from document-level membership to QA-pair membership.
-- Training supervised attack classifiers on auxiliary member/non-member data.
-- Replacing the benchmark with a different privacy task such as data extraction
-  or answer reconstruction.
-- Beating the score by changing the target data, target model scale, or query
-  budget rather than improving membership inference methodology.
+- Changing the task from document-level to question-level membership.
+- Auxiliary documents, shadow models, or any model trained on documents to
+  imitate the target.
+- Supervised attack classifiers trained on membership labels, beyond selecting
+  a small number of hyper-parameters on the dev audit.
+- Beating the score by changing the target model, the candidate data, the
+  question budget or the evaluation.

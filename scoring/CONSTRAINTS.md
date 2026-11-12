@@ -1,35 +1,45 @@
 # Scientist Constraints
 
-## Data
+## Threat model (what the attack may use)
 
-Use the provided `data/synthetic_docvqa` generation procedure and the same
-member/non-member split semantics. Do not add external document data or train
-on the non-member split. The benchmark is about membership inference
-methodology, so improving scores by making the target data easier or by adding
-extra documents is not a valid improvement.
+- The audited model's weights (white-box) and its architecture.
+- The candidate documents passed to `scripts/attack.sh` and their
+  question-answer pairs. Only those questions may be used; no extra queries
+  about other fields.
+- The public pre-trained checkpoint `data/pretrained_reader.pt`, which every
+  audited model was fine-tuned from, used as-is.
+- For development only: the dev audit `data/dev_audit`, including its labels.
+  Hyper-parameters and decision rules may be selected on it, as the paper
+  tunes its hyper-parameters.
 
-## Target Model
+## Not allowed
 
-Use the provided target checkpoint format and comparable parameter scale for
-the audited DocVQA model. Do not replace it with a larger pretrained
-vision-language model for the scored experiment. The target model is the object
-being audited, not the contribution being optimized.
-
-## Query Budget
-
-Respect the reported `max_questions_per_document` constraint. A method can use
-fewer questions, but using more than the configured benchmark budget should be
-reported and will be penalized.
-
-## Auxiliary Data
-
-Do not use auxiliary or shadow datasets for `scaled_whitebox_docmia`. The paper's
-claim is explicitly auxiliary-data-free membership inference.
+- **Auxiliary data:**
+  - generating or collecting other documents from this distribution (e.g.
+    with `data/docgen.py`);
+  - regenerating any corpus from its seed;
+  - using the dev audit's documents or labels inside the attack at test time
+    for anything other than a fixed, pre-selected setting.
+- **Shadow or reference model training:**
+  - training or fine-tuning any model on documents, including on subsets of
+    the candidate set, to imitate the target.
+  - The paper's threat model excludes shadow models. Note that per-question
+    optimisation of a copy of the target (as in the paper's method) is
+    allowed.
+- **Changing the audit object or the evaluation:**
+  - modifying or replacing `target.pt`, `data/` assets, `eval/` or
+    `scripts/evaluate_*.sh`;
+  - reading anything under `eval/test`;
+  - hard-coding per-document answers.
+- **Self-reported numbers:** the evaluator ignores everything except per-document
+  scores and decisions.
 
 ## Compliance Checklist
 
-- [ ] Uses only the provided synthetic DocVQA member/non-member data.
-- [ ] Does not train on non-member documents.
-- [ ] Uses the same target-model scale and checkpoint interface.
-- [ ] Reports the maximum number of questions used per document.
-- [ ] Reports whether auxiliary data was used.
+- [ ] `scripts/attack.sh` computes scores and decisions from the target and
+      the given candidates only.
+- [ ] No generated, collected or regenerated documents are used.
+- [ ] No model is trained on documents; only per-question optimisation of
+      copies of the target or the public checkpoint.
+- [ ] Nothing in `eval/`, `data/` assets or the evaluation scripts was
+      modified or read for answers.

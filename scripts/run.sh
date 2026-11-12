@@ -50,7 +50,7 @@ shortcut() {
 }
 bootstrap() {
   local args=()
-  for v in loss_threshold loss_dev_threshold gradient_ua calibrated_loss weaker_no_opt weaker_one_step calibrated_kmeans stronger_calibrated; do
+  for v in loss_threshold loss_dev_threshold gradient_ua calibrated_loss weaker_no_opt weaker_one_step calibrated_kmeans stronger_calibrated stronger_combined; do
     [ -f eval/test/runs/$v.json ] && args+=(--candidate "$v=eval/test/runs/$v.json")
   done
   [ -f eval/test/runs/shadow_lira.json ] && args+=(--candidate "shadow_lira=eval/test/runs/shadow_lira.json")
@@ -75,6 +75,7 @@ done
 step var_weaker_one_step variant weaker_one_step
 step var_calibrated_kmeans variant calibrated_kmeans
 step var_stronger_calibrated variant stronger_calibrated
+step var_stronger_combined variant stronger_combined
 restore
 step bootstrap bootstrap
 python hardening/rank.py

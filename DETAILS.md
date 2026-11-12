@@ -3,24 +3,37 @@
 - **Paper ID:** 2502.03692
 - **Title:** DOCMIA: Document-level Membership Inference Attacks Against DocVQA Models
 - **Domain:** Document AI / Privacy / Membership Inference
-- **TL;DR:** The paper shows that DocVQA models can leak whether a whole document was in training data by aggregating optimization-based signals across that document's questions.
+- **TL;DR:** The paper shows that DocVQA models leak whether a whole document was
+  in their training data, by aggregating optimisation-based signals across the
+  document's questions, without auxiliary data.
 
 ## Short Summary
 
-DocMIA studies membership inference for document visual question answering
-models at document granularity. The paper exploits the fact that one training
-document typically appears through multiple question-answer pairs. Its main
-attack repeatedly adapts a small part of the target model or input for each
-question, aggregates the resulting optimization traces, and clusters documents
-into member/non-member groups. The reported attacks outperform score, loss, and
-gradient baselines on DocVQA and PFL-DocVQA targets.
+DocMIA studies membership inference against document visual question
+answering models at document granularity. A training document is seen through
+several question-answer pairs. The attack adapts a small part of the target
+model, or the input image, for each question. It aggregates the resulting
+optimisation traces over the document and clusters documents into members and
+non-members. The paper reports that these attacks match or beat score, loss
+and gradient baselines on DocVQA and PFL-DocVQA targets.
 
-## Key Results
+## This gym
 
-- White-box DocMIA reaches about 72-82 F1 across reported model/dataset pairs.
-- On Donut/DocVQA, FL reports 80.33 balanced accuracy and 82.18 F1.
-- Black-box proxy attacks often improve over score-only black-box baselines,
-  with notable low-FPR gains on DocVQA targets.
+This is a scaled white-box reproduction:
+
+- **Documents:** procedural forms.
+- **Target:** a ~1.1M-parameter OCR-free reader, fine-tuned from a public
+  pre-trained checkpoint. Its member/non-member QA accuracy is ~97% vs ~60%,
+  similar to the paper's DocVQA targets.
+- **Candidates:** 600 member and 600 non-member documents per audit.
+- **Test:** hidden.
+
+## Key Results (paper, Donut on DocVQA, white-box)
+
+- FL: 80.33 accuracy, 82.18 F1, 10.67 TPR at 3% FPR.
+- Strongest baseline, SCORELOSS-UA_all: 80.50 accuracy, 81.10 F1, 8.67 TPR at
+  3% FPR.
+- Across targets, the white-box DocMIA variants reach about 72-82 F1.
 
 ---
 
@@ -28,24 +41,43 @@ gradient baselines on DocVQA and PFL-DocVQA targets.
 
 ## Research Question
 
-Given a trained document visual question answering model, a target document,
-and multiple question-answer pairs about that document, decide whether the
-document was included in the model's training set. The membership decision is
-document-level: all questions attached to the same document must be combined
-into a single in/out prediction.
+Given white-box access to a trained document visual question answering (DocVQA)
+model and a set of candidate documents, each with the question-answer pairs
+asked about it, decide for every document whether it was part of the model's
+training set. The decision is document-level: all question-answer pairs of a
+document must be combined into one member/non-member decision and one
+membership score.
+
+## Setting
+
+- The audited model is an OCR-free document QA model (page image + question ->
+  answer from a closed answer bank). It was obtained by fine-tuning a public
+  pre-trained checkpoint (`data/pretrained_reader.pt`) on a private set of
+  documents. Its architecture is in `data/target_model.py`; its weights are
+  given to the attacker (white-box).
+- Documents are scanned forms with five key/value fields; every document comes
+  with 1 to 5 question-answer pairs (the questions the model was trained with
+  for members). Each page has its own scan noise, ink, blur and placement.
+- The candidate set is balanced: half of the candidates are training documents
+  of the audited model, half are fresh documents from the same distribution.
+- The attacker has no auxiliary data: no other documents from this
+  distribution, no shadow or reference models trained to imitate the target,
+  and no knowledge of which documents were used for training.
 
 ## Why It Matters
 
-Documents often contain sensitive personal, financial, or organizational data.
-If a deployed document QA model leaks whether a specific document was used for
-training, it exposes privacy risk even when the model only returns answers.
+Documents carry sensitive personal, financial and business information. If a
+deployed document QA model reveals whether a given document was in its
+training data, it leaks private information even though it only returns
+answers. Document-level membership inference is also the tool an auditor uses
+to check whether particular documents were used to train a model.
 
 ## Success Criteria
 
-A successful system identifies member and non-member documents better than
-chance on balanced member/non-member sets, works without auxiliary shadow
-datasets, and remains effective when the model's normal question-answer utility
-alone is not enough to separate the two classes.
+A good attack separates members from non-members well at a balanced operating
+point (balanced accuracy, F1) and, more importantly for privacy auditing,
+identifies members with very few false positives (true positive rate at 1% and
+3% false positive rate), while respecting the no-auxiliary-data threat model.
 
 ---
 
@@ -56,59 +88,133 @@ alone is not enough to separate the two classes.
 DocMIA introduces document-level membership inference attacks for DocVQA
 models. Instead of treating a single question-answer pair as the unit of
 privacy, it aggregates evidence across all questions associated with a target
-document.
+document, without auxiliary data or shadow models.
 
-## Approach
+## Approach (white-box, Algorithm 1)
 
 For each document/question/answer tuple, the attack starts from the target
-model's trained state and performs a short optimization process that minimizes
-the answer loss for that tuple. It records the L2 distance moved during
-optimization, the number of steps until convergence, and the answer utility
-observed during the process. These features are aggregated across questions
-with average, minimum, maximum, and median statistics, normalized, and clustered
-with KMeans. The cluster with lower optimization distance is treated as the
-member cluster.
+model and runs Adam on the answer loss for that tuple until the loss improves
+by less than a threshold tau or S = 200 steps are reached. It records the L2
+distance moved by the optimised object, the number of steps taken, and the
+answer utility (ACC) averaged over the optimisation. These three features are
+aggregated over the document's questions with {AVG, MIN, MAX, MED}, standardised,
+and clustered with KMeans (k = 2). The cluster with the larger mean distance is
+the non-member cluster. A document's membership score is minus its distance to
+the member-cluster centroid.
 
-The paper proposes three white-box variants: FL optimizes one selected model
-layer, FLLoRA optimizes LoRA parameters attached to that layer, and IG optimizes
-the document image while freezing model weights. In the black-box setting, the
-attacker first queries the deployed model, trains a proxy model on those
-generated labels, and then applies the white-box attacks to the proxy.
+Three variants differ in what is optimised:
+
+- **FL**: the final answer-projection layer.
+- **FLLoRA**: LoRA factors on that layer, with A Kaiming-initialised and B zero
+  so the start equals the target.
+- **IG**: the document image pixels, with the model frozen.
+
+The learning rate and tau are tuned per target model (Appendix C).
+
+## Implementation in this gym
+
+- `method/docmia.py` implements Algorithm 1 for all three variants. Pairs are
+  batched, but every pair keeps its own parameters, Adam state and stopping
+  step.
+- `method/tune_dev.py` runs the Appendix C grid search on the dev audit:
+  - lr in {1e-4 ... 1} for FL and FLLoRA, and {1e-3, 1e-2, 1e-1} for IG;
+  - tau in {1e-6 ... 10};
+  - selection by mean(balanced accuracy, F1).
+
+  It writes `method/config.json`, including the best variant, which becomes the
+  submitted `membership_attack`.
+- `method/attack.py` (via `scripts/attack.sh`) applies that configuration to
+  any audit.
 
 ## Main Claims
 
-The primary claim is that optimization-derived document descriptors expose
-membership more reliably than score, loss, or one-step-gradient baselines, even
-without auxiliary data. Secondary claims are that the attack works in both
-white-box and black-box settings, transfers through a distilled proxy, and can
-be measured in the low-FPR regime used by modern MIA evaluations.
+Optimisation-derived document descriptors expose membership as well as or
+better than score, loss and one-step-gradient baselines, especially in the
+low-false-positive regime, without auxiliary data. The attack also works
+against documents seen through few training questions. The paper's black-box
+variant (distilling the target into a proxy) is not part of this gym.
 
 ---
 
 # Evaluation
 
+## What is evaluated
+
+A submission is an **attack program**, run by the evaluator as
+
+    bash scripts/attack.sh <audit_dir> <output_json>
+
+`<audit_dir>` contains `target.pt` (the audited model; load it with
+`data.target_model.load_checkpoint` or `data.audit_io.load_target`) and
+`candidates/` (`manifest.json` plus page images; `data.audit_io.load_candidates`
+loads both). The manifest lists, for each candidate, its `doc_id`, its image
+and its question-answer pairs (`question`, `field`, `answer`). It holds no
+membership information.
+
+The program must write a JSON file:
+
+    {"doc_ids": [...every candidate id...],
+     "attacks": {
+        "membership_attack": {"scores": [one finite number per document],
+                              "predictions": [one 0/1 decision per document]},
+        "<any other name>":  {"scores": [...], "predictions": [...]}}}
+
+`scores` are membership scores (higher = more likely a training document) and
+are aligned with `doc_ids`. `predictions` are the attack's own member (1) /
+non-member (0) decisions.
+
 ## Metrics
 
-The attack is evaluated as balanced binary classification over documents.
-Metrics are balanced accuracy, ordinary accuracy, F1, TPR at 1% FPR, and TPR at
-3% FPR. Higher is better for all attack-success metrics. The evaluation also
-records two constraints: maximum questions used per document and whether an
-auxiliary dataset was used; lower is better for both.
+Computed by the evaluator from the raw scores and decisions against labels the
+attack never sees:
 
-## Baselines and Targets
+| metric | from | coefficient |
+|---|---|---|
+| `balanced_accuracy` | decisions | 1.0 |
+| `f1` (member class) | decisions | 1.0 |
+| `tpr_at_1_fpr` (largest TPR with FPR <= 1%) | scores | 0.4 |
+| `tpr_at_3_fpr` (largest TPR with FPR <= 3%) | scores | 1.0 |
+| `roc_auc` | scores | 0 (diagnostic) |
 
-The benchmark includes multiple reference systems that convert per-document
-evidence into membership predictions under the same data access and query
-constraints. A useful improvement should raise document-level classification
-quality without using auxiliary shadow datasets or increasing the query budget.
+All are percentages, higher is better. Only the `membership_attack` row of
+experiment `scaled_whitebox_docmia` is ranked. Other named attacks are scored
+and reported under `other_attacks`. Diagnostics on documents with at most two
+question-answer pairs are reported under `diagnostics`. Neither is ranked.
 
-## Evaluation Protocol
+## Failures
 
-The benchmark uses a balanced member/non-member document set. Each document has
-multiple question-answer pairs, and the evaluator reads one output artifact
-containing per-method predictions, scores, or feature arrays. The evaluation
-script does not import method code; it only converts the generated artifact
-into `scoring/scores.json`.
+The `membership_attack` row is always written. If it is missing, or its scores
+are not finite, or its decisions are not exactly 0/1, or its ids do not cover
+every candidate exactly once, it gets the worst value (0) of every metric. A
+program that crashes, times out or writes nothing fails all rows the same way.
+Nothing else in the output (no metric, flag or threshold) is read.
+
+## Baselines
+
+The evaluator computes five reference attacks itself from the audited model.
+They are reported under `baselines` and are identical for every submission:
+
+- `loss_ta`: mean answer loss, thresholded at its mean.
+- `score_ua`: clustering of the mean answer correctness.
+- `score_ua_all`: the same with min/max/median aggregates.
+- `scoreloss_ua_all`: correctness and loss aggregates, clustered.
+- `gradient_ua`: one-step gradient-norm and correctness aggregates, clustered.
+
+## Slices
+
+- **Train (visible):** `bash scripts/evaluate_train.sh` runs the attack on the
+  dev audit `data/dev_audit` (600 members, 600 non-members). Its labels are in
+  `data/dev_audit/labels.json` for development. Output:
+  `scoring/scores_train.json`. `bash scripts/evaluate.sh` writes the same
+  scores to `scoring/scores.json`.
+- **Test (hidden):** `bash scripts/evaluate_test.sh` (no arguments) runs the
+  same attack on a hidden audit. That audit has a different target, built with
+  the same recipe from a different private document set, and 1200 candidates
+  of the same composition. Output: `scoring/scores_test.json`. The hidden audit
+  and its labels exist only in the test environment.
+
+The test runs on one CPU core. The reference attack takes about a minute per
+audit, and the evaluator stops an attack after four hours.
 
 ---
 
@@ -460,6 +566,54 @@ into `scoring/scores.json`.
 ### [2026-06-05 00:02] - secondary_claims
 - Rechecked the final workspace and tightened `scripts/reproduce.sh` so the
   end-to-end entrypoint explicitly refreshes all scoring artifacts.
+
+</details>
+
+### Iteration 11: claude-opus-5-5 (hardener)
+- **Milestone**: `secondary_claims` | **Status**: done
+- **Working time**: 1.0h | **GPU**: 0.0h
+- **Jobs**: 19 total (14 completed, 1 failed)
+
+<details>
+<summary>Progress Log</summary>
+
+### [2026-06-04 18:44] - core_claim
+- Ran the scaled white-box DocMIA pipeline in a compute job.
+- DocMIA FL outperformed score-only and one-step-gradient baselines on the non-trivial synthetic DocVQA benchmark.
+
+### [2026-06-04 18:53] - core_claim_plus
+- Verified the hardened evaluator in a compute job.
+- Recomputed scores from raw feature arrays without importing method code.
+
+### [2026-06-04 22:58] - core_claim_plus
+- Added the missing FLLoRA white-box variant to the method and scoring contract.
+- Prepared a new end-to-end job to regenerate method outputs and evaluate FLLoRA from raw features.
+
+### [2026-06-04 23:02] - core_claim_plus
+- Audited the continuation workspace and confirmed the existing FL, IG, score, and gradient implementations preserve the paper's DocMIA computation at scaled size.
+- Hardened `eval/` so standalone scoring works for both fresh `doc_ids` artifacts and older artifacts that follow manifest document order.
+
+### [2026-06-04 23:11] - secondary_claims
+- Compute job `f60d7a61-e05` regenerated the full scaled DocMIA artifact with FLLoRA included.
+- `scoring/scores.json` now contains score, gradient, FL, FLLoRA, and IG results from the independent evaluator, and `python validate.py --compare` passed in the compute container.
+
+### [2026-06-04 23:38] - secondary_claims
+- Re-ran local validation, Python compilation, and shell syntax checks.
+- Confirmed the packaged scaled DocMIA gym remains at `secondary_claims`.
+
+### [2026-06-04 23:48] - secondary_claims
+- Completed final verification against existing successful container jobs and
+  current local validation checks.
+- Confirmed the workspace is ready as a scaled reusable research gym.
+
+### [2026-06-05 00:02] - secondary_claims
+- Rechecked the final workspace and tightened `scripts/reproduce.sh` so the
+  end-to-end entrypoint explicitly refreshes all scoring artifacts.
+
+### [2026-11-12] - secondary_claims (hardening iteration)
+- Rebuilt the gym around a hidden audit: secret-seeded private set, its own fine-tuned target, labels and hashes only in eval/test; the hidden test runs the submitted attack program and recomputes every metric; baselines computed by the evaluator; one ranked `membership_attack` row with worst values on failure.
+- Restored the paper's protocol at small scale: public pre-trained reader fine-tuned on private documents (member/non-member QA 97%/60%), Algorithm 1 with S=200, Adam, Appendix C lr/tau grid on the dev audit, Phi_all + KMeans, FLLoRA starting at the target; 600+600 candidates per audit.
+- Hidden test: DocMIA (FLLoRA, dev-selected) BA 76.7 / F1 80.1 / TPR@3%FPR 14.7; beats SCORELOSS-UA_all and score baselines, ties LOSS-TA on BA/F1 while beating it at low FPR, ties GRADIENT-UA. Ablations significantly worse; all REDTEAM shortcuts closed. See HARDENING.md.
 
 </details>
 

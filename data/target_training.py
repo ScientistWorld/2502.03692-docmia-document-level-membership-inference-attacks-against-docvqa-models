@@ -5,8 +5,13 @@ Mirrors the paper's target-model protocol (Appendix D.1) at small scale:
 1. a *public pre-trained checkpoint* is produced once by training the model on a
    public corpus of generated documents (the analogue of Donut-base / VT5 /
    Pix2Struct pre-training), and
-2. each audited target is that checkpoint fine-tuned on a private document set,
-   with early stopping on a private validation set.
+2. each audited target is that checkpoint fine-tuned on a private document set
+   for a fixed schedule (8 epochs).  The paper early-stops on validation
+   performance; at this scale the validation curve is flat and noisy after a
+   couple of epochs, so early stopping picked anywhere between epoch 2 and 8 for
+   different seeds (train/test gaps of 15 vs 36 points).  A fixed schedule keeps
+   the dev and hidden audits at comparable difficulty; 8 epochs gives a
+   member/non-member QA gap close to the paper's DocVQA targets (~36-40 points).
 
 An audit = target checkpoint + a balanced candidate set of member documents
 (sampled from the private fine-tuning set) and non-member documents (fresh
@@ -47,9 +52,9 @@ FINETUNE_RECIPE = {
     "validation_documents": 200,
     "candidate_members": 300,
     "candidate_nonmembers": 300,
-    "epochs": 40,
-    "patience": 5,
-    "early_stopping": True,
+    "epochs": 8,
+    "patience": None,
+    "early_stopping": False,
     "lr": 1e-3,
     "batch_docs": 32,
     "weight_decay": 1e-4,

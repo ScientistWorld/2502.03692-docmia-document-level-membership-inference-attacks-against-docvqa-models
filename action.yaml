@@ -3,4 +3,4 @@ action: submit
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: "Hardening job 4 (resumes job 3): rerun calibrated variant with the paper's mean(BA,F1) decision criterion, measure shadow-model LiRA brute force on the hidden test, bootstrap, rank, validate"
+notes: "Hardening job 5 (resumes): score stronger_combined variant on the hidden test, rerun paired bootstrap and rank, validate"

@@ -3,4 +3,4 @@ action: submit
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: "Hardening job 3: rebuild 600+600 dev/hidden audits, retune DocMIA (LoRA B=0 init, IG on 600 dev docs), score reference + variants + shortcuts on the hidden test, bootstrap, rank"
+notes: "Hardening job 4 (resumes job 3): rerun calibrated variant with the paper's mean(BA,F1) decision criterion, measure shadow-model LiRA brute force on the hidden test, bootstrap, rank, validate"

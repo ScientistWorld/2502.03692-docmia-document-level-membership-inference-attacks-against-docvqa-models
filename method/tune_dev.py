@@ -3,8 +3,9 @@
 The paper fixes Adam, S=200 steps and the last projection layer, then grid-searches
 the learning rate alpha and the stopping threshold tau per target model and
 keeps the setting with the best attack performance (average of accuracy and F1).
-Here the search runs on the dev audit only; the selected setting is written to
-``method/config.json`` and then applied unchanged to any other audit.
+Here the search runs on the dev audit only; the selected setting, and the
+variant (FL, FLLoRA or IG) with the best dev score, are written to
+``method/config.json`` and applied unchanged to any other audit.
 """
 
 from __future__ import annotations
@@ -43,6 +44,7 @@ LR_GRID = {
     "fllora": [1e-4, 1e-3, 1e-2, 1e-1, 0.5, 1.0],
     "ig": [1e-3, 1e-2, 1e-1],
 }
+CACHE_VERSION = "v3"  # bump when the attack implementation changes
 TAU_GRID = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 0.3, 1.0, 3.0, 10.0]
 
 
@@ -71,7 +73,7 @@ def tune(audit_dir, labels: dict, variants, lr_grid: dict, tau_grid, steps: int,
         h = hidden_states(model, cand) if variant != "ig" else None
         rows = []
         for lr in lr_grid[variant]:
-            cache = Path(cache_dir) / f"{variant}_lr{lr:g}_n{cand.num_docs}.json" if cache_dir else None
+            cache = Path(cache_dir) / f"{CACHE_VERSION}_{variant}_lr{lr:g}_n{cand.num_docs}.json" if cache_dir else None
             if cache is not None and cache.exists():
                 rows.extend(json.loads(cache.read_text(encoding="utf-8")))
                 log(f"[tune] {variant} lr={lr}: cached")
@@ -106,7 +108,7 @@ def main() -> None:
     parser.add_argument("--labels", default=None)
     parser.add_argument("--variants", default="fl,fllora,ig")
     parser.add_argument("--ig-lrs", default=None)
-    parser.add_argument("--ig-docs", type=int, default=300,
+    parser.add_argument("--ig-docs", type=int, default=600,
                         help="tune IG on the first N dev documents (IG is ~20x costlier per step)")
     parser.add_argument("--cache-dir", default=None)
     parser.add_argument("--output-config", default=str(ROOT / "method" / "config.json"))
@@ -125,6 +127,8 @@ def main() -> None:
     for variant in variants:
         config[variant]["lr"] = report[variant]["best"]["lr"]
         config[variant]["tau"] = report[variant]["best"]["tau"]
+    # The submitted attack is the variant with the best dev selection score.
+    config["primary_variant"] = max(variants, key=lambda v: report[v]["best"]["selection"])
     config["selected_on"] = "dev audit (data/dev_audit), mean of balanced accuracy and F1"
     Path(args.output_config).write_text(json.dumps(config, indent=1), encoding="utf-8")
     Path(args.report).write_text(json.dumps(report, indent=1), encoding="utf-8")

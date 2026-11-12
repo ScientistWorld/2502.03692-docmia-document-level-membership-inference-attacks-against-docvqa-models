@@ -10,8 +10,8 @@ records
 * the answer utility u (ACC) averaged over the optimisation trace.
 
 The optimised object is the final answer-projection layer (FL), LoRA factors on
-that layer initialised with Kaiming initialisation (FLLoRA), or the document
-image pixels (IG).  Features are aggregated over the document's questions with
+that layer (FLLoRA; A Kaiming-initialised, B zero, so optimisation starts at
+the target), or the document image pixels (IG).  Features are aggregated over the document's questions with
 {AVG, MIN, MAX, MED}, standardised, and clustered with KMeans; the cluster with
 the larger mean distance is the non-member cluster, and the membership score of
 a document is minus its distance to the member centroid.
@@ -165,9 +165,10 @@ def fllora_trajectories(model: TinyDocVQA, cand: Candidates, lr: float, steps: i
     scaling = alpha / rank
     gen = torch.Generator().manual_seed(seed)
     total = h.shape[0]
-    # kaiming_uniform_(a=sqrt(5)) bound = 1/sqrt(fan_in), as for nn.Linear weights
+    # LoRA initialisation: A ~ kaiming_uniform_(a=sqrt(5)) (bound 1/sqrt(fan_in)), B = 0, so the
+    # adapted model equals the target at the start (Algorithm 1: theta_0 = theta_t).
     lora_a = (torch.rand(total, rank, dim, generator=gen, dtype=torch.float64) * 2 - 1) / math.sqrt(dim)
-    lora_b = (torch.rand(total, num_answers, rank, generator=gen, dtype=torch.float64) * 2 - 1) / math.sqrt(rank)
+    lora_b = torch.zeros(total, num_answers, rank, dtype=torch.float64)
     answers = cand.pair_answer
     parts = []
     for start in range(0, total, chunk):

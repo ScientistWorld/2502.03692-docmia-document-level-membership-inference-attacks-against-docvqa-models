@@ -23,7 +23,7 @@ import numpy as np
 from sklearn.metrics import roc_auc_score, roc_curve
 
 HERE = Path(__file__).resolve().parent
-SLOTS = ("docmia_fl", "docmia_fllora", "docmia_ig")
+SLOTS = ("membership_attack", "docmia_fl", "docmia_fllora", "docmia_ig")
 
 
 def _load(path: Path, doc_ids: list[str]):
@@ -64,7 +64,7 @@ def main():
         name, path = spec.split("=", 1)
         cand = _load(Path(path), doc_ids)
         report[name] = {}
-        for exp, mask in (("scaled_whitebox_docmia", np.ones(len(doc_ids), bool)), ("few_question_documents", n_q <= 2)):
+        for exp, mask in (("scaled_whitebox_docmia", np.ones(len(doc_ids), bool)), ("low_evidence_subset", n_q <= 2)):
             y = y_all[mask]
             rng = np.random.default_rng(0)
             idx_sets = [rng.integers(0, len(y), len(y)) for _ in range(args.reps)]

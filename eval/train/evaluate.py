@@ -40,17 +40,14 @@ from torch import nn
 
 ROOT = Path(__file__).resolve().parents[2]
 AUDIT = ROOT / "data" / "dev_audit"
-REQUIRED_SLOTS = ("docmia_fl", "docmia_fllora", "docmia_ig")
+REQUIRED_SLOTS = ("membership_attack",)
 EXPERIMENTS = {
     "scaled_whitebox_docmia": {
         "max_questions": None,
         "metrics": ("balanced_accuracy", "f1", "roc_auc", "tpr_at_1_fpr", "tpr_at_3_fpr"),
     },
-    "few_question_documents": {
-        "max_questions": 2,
-        "metrics": ("balanced_accuracy", "f1", "roc_auc", "tpr_at_3_fpr", "member_recall"),
-    },
 }
+FEW_QUESTIONS = 2  # diagnostic subset: documents with at most this many QA pairs
 BASELINES = ("loss_ta", "score_ua", "score_ua_all", "scoreloss_ua_all", "gradient_ua")
 
 
@@ -244,27 +241,40 @@ def evaluate(command: str, audit_dir: Path, labels_path: Path, timeout: float, k
         if work is not None:
             shutil.rmtree(work, ignore_errors=True)
 
-    names = list(REQUIRED_SLOTS) + sorted(n for n in attacks if n not in REQUIRED_SLOTS)
+    others = sorted(n for n in attacks if n not in REQUIRED_SLOTS)
+    few = n_questions <= FEW_QUESTIONS
+    diag = ("balanced_accuracy", "f1", "roc_auc", "tpr_at_3_fpr", "member_recall")
     experiments = {}
     for exp, spec in EXPERIMENTS.items():
         mask = np.ones(len(y), dtype=bool) if spec["max_questions"] is None else n_questions <= spec["max_questions"]
         results = {}
-        for name in names:
+        for name in REQUIRED_SLOTS:
             if name in attacks:
                 preds, scores = attacks[name]
                 results[name] = _metrics(y[mask], preds[mask], scores[mask], spec["metrics"])
             else:
                 results[name] = _worst(spec["metrics"])
+        rows = {**{n: attacks[n] for n in others}, **{f"baseline:{b}": v for b, v in baselines.items()}}
+        if REQUIRED_SLOTS[0] in attacks:
+            rows = {REQUIRED_SLOTS[0]: attacks[REQUIRED_SLOTS[0]], **rows}
         experiments[exp] = {
             "slice": "train",
             "documents": int(mask.sum()),
             "members": int(y[mask].sum()),
             "results": results,
             "baselines": {b: _metrics(y[mask], p[mask], s[mask], spec["metrics"]) for b, (p, s) in baselines.items()},
+            "other_attacks": {n: _metrics(y[mask], attacks[n][0][mask], attacks[n][1][mask], spec["metrics"])
+                              for n in others},
+            "diagnostics": {
+                f"documents_with_at_most_{FEW_QUESTIONS}_questions": {
+                    "documents": int(few.sum()),
+                    "rows": {n: _metrics(y[few], p[few], s_[few], diag) for n, (p, s_) in rows.items()},
+                },
+            },
             "attack_status": {
                 "failure": failure,
-                "slots": {n: status.get(n, "missing: scored with worst values") for n in names},
-                "other": {n: s for n, s in status.items() if n not in names},
+                "slots": {n: status.get(n, "missing: scored with worst values") for n in REQUIRED_SLOTS},
+                "other": {n: s for n, s in status.items() if n not in REQUIRED_SLOTS},
             },
         }
     return {"experiments": experiments}

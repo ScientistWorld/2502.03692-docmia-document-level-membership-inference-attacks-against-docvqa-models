@@ -50,8 +50,8 @@ PRETRAIN_RECIPE = {
 FINETUNE_RECIPE = {
     "private_documents": 600,
     "validation_documents": 200,
-    "candidate_members": 300,
-    "candidate_nonmembers": 300,
+    "candidate_members": 600,
+    "candidate_nonmembers": 600,
     "epochs": 8,
     "patience": None,
     "early_stopping": False,

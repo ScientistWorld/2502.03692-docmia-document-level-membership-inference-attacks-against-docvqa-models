@@ -5,6 +5,8 @@ Usage: python method/attack.py --audit-dir <dir> --output <json> [--config metho
 The audit directory holds ``target.pt`` and ``candidates/`` (no labels).  The
 output lists, for every attack, one membership score (higher = more likely a
 training document) and one binary membership decision per candidate document.
+``membership_attack`` (the scored submission) is the DocMIA variant selected on
+the dev audit; the three variants are also reported individually.
 """
 
 from __future__ import annotations
@@ -43,6 +45,7 @@ DEFAULT_CONFIG = {
     "fl": {"lr": 1e-3, "tau": 1e-4},
     "fllora": {"lr": 1e-3, "tau": 1e-4, "rank": 4, "alpha": 4.0, "seed": 0},
     "ig": {"lr": 1e-3, "tau": 1e-4},
+    "primary_variant": "fl",
 }
 
 
@@ -104,6 +107,9 @@ def run(audit_dir: str | Path, config: dict, variants=("fl", "fllora", "ig"), lo
         features[name] = feats.tolist()
         timing[name] = round(time.time() - start, 2)
         log(f"[attack] {name}: {timing[name]}s, predicted members {int(preds.sum())}/{len(preds)}")
+    primary = f"docmia_{config.get('primary_variant', 'fl')}"
+    if primary in attacks:
+        attacks = {"membership_attack": attacks[primary], **attacks}
     return {"doc_ids": cand.doc_ids, "attacks": attacks, "features": features, "timing_sec": timing}
 
 

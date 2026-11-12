@@ -48,12 +48,12 @@ HIDDEN_AUDIT = HERE / "audit"
 HIDDEN_LABELS = HERE / "audit_labels.json"
 HIDDEN_HASHES = HERE / "audit_sha256.json"
 
-SLOTS = ("docmia_fl", "docmia_fllora", "docmia_ig")
+SLOTS = ("membership_attack",)  # the ranked submission; other attacks are reported unranked
 RESERVED = {"loss_ta", "score_ua", "score_ua_all", "scoreloss_ua_all", "gradient_ua"}
 EXPERIMENT_SPECS = (
     ("scaled_whitebox_docmia", None, ("balanced_accuracy", "f1", "roc_auc", "tpr_at_1_fpr", "tpr_at_3_fpr")),
-    ("few_question_documents", 2, ("balanced_accuracy", "f1", "roc_auc", "tpr_at_3_fpr", "member_recall")),
 )
+LOW_EVIDENCE = 2  # diagnostic subset: candidates carrying at most this many QA pairs
 
 
 def sha256(path: Path) -> str:
@@ -245,27 +245,36 @@ def score(command: str, audit_dir: Path, labels_path: Path, hashes_path: Path | 
         shutil.rmtree(output.parent, ignore_errors=True)
     except Exception as exc:  # the attack program failed: every slot scores as failed
         failure = f"{type(exc).__name__}: {exc}"
-    rows = list(SLOTS) + sorted(set(usable) - set(SLOTS))
+    extra = sorted(set(usable) - set(SLOTS))
+    low = audit.n_questions <= LOW_EVIDENCE
+    low_metrics = ("balanced_accuracy", "f1", "roc_auc", "tpr_at_3_fpr", "member_recall")
     payload = {"experiments": {}}
     for name, max_q, metrics in EXPERIMENT_SPECS:
         keep = np.ones(len(audit.y), bool) if max_q is None else audit.n_questions <= max_q
         y = audit.y[keep]
         results = {}
-        for row in rows:
+        for row in SLOTS:
             if row in usable:
                 decisions, scores = usable[row]
                 results[row] = score_rows(y, decisions[keep], scores[keep], metrics)
             else:
                 results[row] = {m: 0.0 for m in metrics}
+        listed = {r: usable[r] for r in list(SLOTS) + extra if r in usable}
+        listed.update({f"baseline:{b}": v for b, v in reference_attacks.items()})
         payload["experiments"][name] = {
             "slice": "test",
             "documents": int(keep.sum()),
             "members": int(y.sum()),
             "results": results,
             "baselines": {b: score_rows(y, d[keep], s[keep], metrics) for b, (d, s) in reference_attacks.items()},
+            "other_attacks": {r: score_rows(y, usable[r][0][keep], usable[r][1][keep], metrics) for r in extra},
+            "diagnostics": {f"documents_with_at_most_{LOW_EVIDENCE}_questions": {
+                "documents": int(low.sum()),
+                "rows": {r: score_rows(audit.y[low], d[low], s_[low], low_metrics) for r, (d, s_) in listed.items()},
+            }},
             "attack_status": {"failure": failure,
-                              "slots": {r: notes.get(r, "missing: scored with worst values") for r in rows},
-                              "other": {k: v for k, v in notes.items() if k not in rows}},
+                              "slots": {r: notes.get(r, "missing: scored with worst values") for r in SLOTS},
+                              "other": {k: v for k, v in notes.items() if k not in SLOTS}},
         }
     return payload
 

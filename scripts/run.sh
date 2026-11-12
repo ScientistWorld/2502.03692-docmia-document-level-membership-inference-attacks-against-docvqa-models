@@ -1,5 +1,5 @@
 #!/bin/bash
-# Hardening job 2: build the final gym assets, tune the reference on the dev
+# Hardening job 3: build the final gym assets, tune the reference on the dev
 # audit, score the reference on train and on the hidden test, then replay the
 # variants and shortcuts through the hidden test.  Resumable: every finished
 # step leaves hardening/runs/.done_<step> and is skipped after a restart.
@@ -50,7 +50,7 @@ shortcut() {
 }
 bootstrap() {
   local args=()
-  for v in loss_threshold loss_dev_threshold calibrated_loss weaker_no_opt weaker_one_step stronger_calibrated; do
+  for v in loss_threshold loss_dev_threshold gradient_ua calibrated_loss weaker_no_opt weaker_one_step calibrated_kmeans stronger_calibrated; do
     [ -f eval/test/runs/$v.json ] && args+=(--candidate "$v=eval/test/runs/$v.json")
   done
   python eval/test/paired_bootstrap.py --reference eval/test/runs/reference.json "${args[@]}" \
@@ -65,13 +65,14 @@ step build_test python eval/test/build_test_audit.py
 step tune python method/tune_dev.py --cache-dir tmp/tune_cache
 step eval_train eval_train
 step eval_test eval_test
-for v in loss_threshold weaker_no_opt loss_dev_threshold calibrated_loss; do step var_$v variant $v; done
+for v in loss_threshold weaker_no_opt loss_dev_threshold gradient_ua calibrated_loss; do step var_$v variant $v; done
 for s in empty_output empty_results omit_methods constant_one manifest_labels filename_labels \
          bruteforce_generator move_ground_truth forged_scores threshold_override nan_scores \
          nonbinary_predictions read_hidden_labels; do
   step sc_$s shortcut $s
 done
 step var_weaker_one_step variant weaker_one_step
+step var_calibrated_kmeans variant calibrated_kmeans
 step var_stronger_calibrated variant stronger_calibrated
 restore
 step bootstrap bootstrap

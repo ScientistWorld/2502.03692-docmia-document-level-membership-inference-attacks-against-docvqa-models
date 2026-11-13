@@ -1,8 +1,6 @@
 # Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends.
-action: submit
-gpus: 0
-test: true
+action: done
 milestone: secondary_claims
-notes: "Follow-up (resumes the hardening pipeline): honest public-reader calibration variant and git-history label read through the hidden test, then paired bootstrap, rank and validate again."
+notes: "Hidden labels and dev audit sealed while the attack runs (label read now fails, was perfect); hidden test enlarged to four audits (better variant +12.1 [+5.1,+17.8] TPR@3%FPR, GRADIENT-UA no longer ties); reference re-run end to end (BA 75.75, F1 79.47, TPR@3% 16.88). Left to grader: shadow models (R +3.30), labels in git history (R +6.95). See HARDENING.md."

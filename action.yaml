@@ -3,6 +3,6 @@
 # only after your turn ends.
 action: submit
 gpus: 0
-test: false
+test: true
 milestone: secondary_claims
-notes: "Hardening job: build 4 hidden audits (new secret seed), smoke-check the sealed hidden test, retune DocMIA on dev, score reference on train/test, replay variants and shortcuts (incl. shadow LiRA, dev-target and cross-audit reference models), paired bootstrap, rank, validate. Resumable."
+notes: "Follow-up (resumes the hardening pipeline): honest public-reader calibration variant and git-history label read through the hidden test, then paired bootstrap, rank and validate again."

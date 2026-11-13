@@ -1,4 +1,8 @@
 # Once you set action to 'submit' or 'done', STOP immediately.
-action: done
+# Do NOT sleep, poll, or wait for jobs. The system reads this file
+# only after your turn ends.
+action: pending
+gpus: 0
+test: false
 milestone: secondary_claims
-notes: "Hardened DocMIA gym: hidden secret-seeded audit run through the submitted attack program; evaluator-computed baselines; single ranked membership_attack row with worst values on failure; paper protocol restored (pretrained reader + fine-tune, S=200, Appendix C tuning, LoRA B=0). All REDTEAM shortcuts closed; stronger variant +0.87, ablations significantly lower; label-reading and shadow-LiRA left to the grader (see HARDENING.md)."
+notes: ""

@@ -1,15 +1,17 @@
-"""Build the hidden test audit (run once; outputs are committed under eval/test/).
+"""Build the hidden test audits (run once; outputs are committed under eval/test/).
 
-Uses the public target recipe (``data/target_training.py``) with the secret seed
-in ``eval/test/secret_seed.txt``: the private fine-tuning set, the validation
-set, the non-member documents and the member selection all derive from that
-seed, so the membership labels cannot be regenerated from public code.
+The hidden test holds ``N_AUDITS`` independent audits.  Each one is a target
+fine-tuned with the public recipe (``data/target_training.py``, the same recipe
+as the visible dev audit) on its own private document set, plus 600 member and
+600 non-member candidates with neutral, shuffled ids.  Every private set, every
+non-member set and every member selection derives from the secret seed in
+``eval/test/secret_seed.txt``, so no label can be regenerated from public code.
 
 Outputs (all inside eval/test/):
-  audit/target.pt, audit/candidates/   - what an attack receives at test time
-  audit_labels.json                    - membership labels (test answers)
-  audit_sha256.json                    - integrity hashes checked by the evaluator
-  audit_stats.json                     - target statistics (member/non-member QA accuracy)
+  audits/<name>/target.pt, audits/<name>/candidates/   what an attack receives
+  audit_labels.json     {audit name: {doc_id: 0/1}}     (test answers)
+  audit_sha256.json     {"audits": [...], "files": {path: sha256}}  integrity record
+  audit_stats.json      per-audit target statistics (member/non-member QA accuracy)
 """
 
 from __future__ import annotations
@@ -22,9 +24,12 @@ for _var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
 import argparse
 import hashlib
 import json
+import secrets
 import shutil
 import sys
 from pathlib import Path
+
+import torch
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -33,33 +38,56 @@ if str(ROOT) not in sys.path:
 
 from data.target_training import build_audit  # noqa: E402
 
+N_AUDITS = 4
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--pretrained", default=str(ROOT / "data" / "pretrained_reader.pt"))
-    parser.add_argument("--out", default=str(HERE))
+    parser.add_argument("--audits", type=int, default=N_AUDITS)
     parser.add_argument("--finetune-overrides", default="{}")
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
-    out = Path(args.out)
-    audit = out / "audit"
-    if (out / "audit_sha256.json").exists() and not args.force:  # written last: completion marker
-        print("hidden audit already built")
-        return
-    shutil.rmtree(audit, ignore_errors=True)
-    (out / "audit_sha256.json").unlink(missing_ok=True)
-    seed = (HERE / "secret_seed.txt").read_text(encoding="utf-8").strip()
-    result = build_audit(f"hidden-test|{seed}", audit, args.pretrained, json.loads(args.finetune_overrides))
-    (out / "audit_labels.json").write_text(json.dumps(result["labels"], indent=1), encoding="utf-8")
-    (out / "audit_stats.json").write_text(
-        json.dumps({"stats": result["stats"], "history": result["history"]}, indent=1), encoding="utf-8")
-    hashes = {
-        str(p.relative_to(audit)): hashlib.sha256(p.read_bytes()).hexdigest()
-        for p in sorted(audit.rglob("*")) if p.is_file()
+    torch.set_num_threads(max(1, int(os.environ.get("DOCMIA_THREADS", "1") or 1)))
+    marker = HERE / "audit_sha256.json"  # written last: completion marker
+    root = HERE / "audits"
+    if marker.exists() and not args.force:
+        record = json.loads(marker.read_text(encoding="utf-8"))
+        if "audits" in record:
+            print("hidden audits already built:", record["audits"])
+            return
+    seed_file = HERE / "secret_seed.txt"
+    if not seed_file.exists():
+        seed_file.write_text(secrets.token_hex(32) + "\n", encoding="utf-8")
+    seed = seed_file.read_text(encoding="utf-8").strip()
+    marker.unlink(missing_ok=True)
+    root.mkdir(parents=True, exist_ok=True)
+    labels, stats = {}, {}
+    names = [f"audit_{k}" for k in range(args.audits)]
+    partial = HERE / "audit_build_partial.json"  # resumable: finished audits are kept
+    done = json.loads(partial.read_text(encoding="utf-8")) if partial.exists() else {"labels": {}, "stats": {}}
+    for k, name in enumerate(names):
+        if name in done["labels"] and (root / name / "target.pt").exists():
+            labels[name], stats[name] = done["labels"][name], done["stats"][name]
+            print(f"[build] {name}: kept")
+            continue
+        shutil.rmtree(root / name, ignore_errors=True)
+        result = build_audit(f"hidden-test|{seed}|{name}", root / name, args.pretrained,
+                             json.loads(args.finetune_overrides), log=lambda s: None)
+        labels[name], stats[name] = result["labels"], {"stats": result["stats"], "history": result["history"]}
+        done["labels"][name], done["stats"][name] = labels[name], stats[name]
+        partial.write_text(json.dumps(done), encoding="utf-8")
+        print(f"[build] {name}: gap {result['stats']['train_test_gap_points']:.1f} points", flush=True)
+    (HERE / "audit_labels.json").write_text(json.dumps(labels, indent=1), encoding="utf-8")
+    (HERE / "audit_stats.json").write_text(json.dumps(stats, indent=1), encoding="utf-8")
+    files = {
+        str(p.relative_to(HERE)): hashlib.sha256(p.read_bytes()).hexdigest()
+        for name in names for p in sorted((root / name).rglob("*")) if p.is_file()
     }
-    hashes["../audit_labels.json"] = hashlib.sha256((out / "audit_labels.json").read_bytes()).hexdigest()
-    (out / "audit_sha256.json").write_text(json.dumps(hashes, indent=1), encoding="utf-8")
-    print(json.dumps(result["stats"], indent=1))
+    files["audit_labels.json"] = hashlib.sha256((HERE / "audit_labels.json").read_bytes()).hexdigest()
+    marker.write_text(json.dumps({"audits": names, "files": files}, indent=1), encoding="utf-8")
+    partial.unlink(missing_ok=True)
+    print(json.dumps({n: s["stats"]["train_test_gap_points"] for n, s in stats.items()}, indent=1))
 
 
 if __name__ == "__main__":

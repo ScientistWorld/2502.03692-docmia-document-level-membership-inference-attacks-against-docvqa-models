@@ -244,3 +244,9 @@ hardening/runs/.done_*
 !hardening/archive_job2/runs/
 !eval/test/runs/
 hardening/runs/.done_*
+
+# Hidden test: kept raw attack outputs are regenerable evidence (never commit hidden-test
+# attack outputs); the hidden targets are committed on purpose.
+eval/test/runs/
+eval/test/audit_build_partial.json
+!eval/test/audits/*/target.pt

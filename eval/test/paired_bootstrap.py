@@ -1,11 +1,14 @@
-"""Paired bootstrap of (candidate - reference) on the hidden test documents.
+"""Paired bootstrap of (candidate - reference) on the hidden test audits.
 
-    python eval/test/paired_bootstrap.py --reference eval/test/runs/reference.json \
-        --candidate name=eval/test/runs/name.json [...] --out hardening/paired_bootstrap.json
+    python eval/test/paired_bootstrap.py --reference eval/test/runs/reference \
+        --candidate name=eval/test/runs/name [...] --out hardening/paired_bootstrap_test.json
 
-Both attacks are scored on the same resampled documents, so the interval
-reflects test-sampling noise of the *difference*, which is what decides
-whether a variant genuinely beats the reference.
+Each directory holds the raw attack outputs kept by ``evaluate.py --keep-output``
+(one ``<audit>.json`` per hidden audit).  In every bootstrap replicate the members
+and the non-members of each audit are resampled, both attacks are scored on the
+same resampled documents, and each metric is averaged over the audits exactly as
+the ranked row is.  The interval therefore reflects the test-sampling noise of the
+*difference*, which decides whether a variant genuinely beats the reference.
 """
 
 from __future__ import annotations
@@ -23,15 +26,16 @@ import numpy as np
 from sklearn.metrics import roc_auc_score, roc_curve
 
 HERE = Path(__file__).resolve().parent
-SLOTS = ("membership_attack", "docmia_fl", "docmia_fllora", "docmia_ig")
+SLOT = "membership_attack"
+NAMES = ("balanced_accuracy", "f1", "roc_auc", "tpr_at_1_fpr", "tpr_at_3_fpr")
 
 
-def _load(path: Path, doc_ids: list[str]):
+def _load_output(path: Path, doc_ids: list[str]):
     raw = json.loads(path.read_text(encoding="utf-8"))
     where = {d: i for i, d in enumerate(raw["doc_ids"])}
     perm = np.array([where[d] for d in doc_ids])
-    return {s: (np.asarray(a["predictions"], float)[perm].astype(int), np.asarray(a["scores"], float)[perm])
-            for s, a in raw["attacks"].items()}
+    item = raw["attacks"][SLOT]
+    return np.asarray(item["predictions"], float)[perm].astype(int), np.asarray(item["scores"], float)[perm]
 
 
 def _stats(y, p, s):
@@ -40,58 +44,51 @@ def _stats(y, p, s):
     prec = (y[p == 1] == 1).mean() if p.sum() else 0.0
     f1 = 2 * prec * tp / (prec + tp) if prec + tp else 0.0
     fpr, tpr, _ = roc_curve(y, s, drop_intermediate=False)
-    return np.array([50 * (tp + tn), 100 * f1, 100 * roc_auc_score(y, s), 100 * tpr[fpr <= 0.03].max()])
+    return np.array([50 * (tp + tn), 100 * f1, 100 * roc_auc_score(y, s),
+                     100 * tpr[fpr <= 0.01].max(), 100 * tpr[fpr <= 0.03].max()])
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--reference", required=True)
-    parser.add_argument("--candidate", action="append", default=[])
-    parser.add_argument("--labels", default=str(HERE / "audit_labels.json"))
-    parser.add_argument("--manifest", default=str(HERE / "audit" / "candidates" / "manifest.json"))
-    parser.add_argument("--reps", type=int, default=2000)
+    parser.add_argument("--reference", required=True, help="directory of the reference's kept attack outputs")
+    parser.add_argument("--candidate", action="append", default=[], help="name=directory of kept attack outputs")
+    parser.add_argument("--reps", type=int, default=1000)
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
-    manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
-    doc_ids = [d["doc_id"] for d in manifest["documents"]]
-    n_q = np.array([len(d["qas"]) for d in manifest["documents"]])
-    labels = json.loads(Path(args.labels).read_text(encoding="utf-8"))
-    y_all = np.array([int(labels[d]) for d in doc_ids])
-    ref = _load(Path(args.reference), doc_ids)
-    names = ("balanced_accuracy", "f1", "roc_auc", "tpr_at_3_fpr")
+    record = json.loads((HERE / "audit_sha256.json").read_text(encoding="utf-8"))
+    labels = json.loads((HERE / "audit_labels.json").read_text(encoding="utf-8"))
+    audits = []
+    for name in record["audits"]:
+        manifest = json.loads((HERE / "audits" / name / "candidates" / "manifest.json").read_text(encoding="utf-8"))
+        doc_ids = [d["doc_id"] for d in manifest["documents"]]
+        y = np.array([int(labels[name][d]) for d in doc_ids])
+        audits.append((name, doc_ids, y))
+    rng = np.random.default_rng(0)
+    resamples = [[np.concatenate([rng.choice(np.where(y == c)[0], int((y == c).sum())) for c in (0, 1)])
+                  for _, _, y in audits] for _ in range(args.reps)]
+    ref = [_load_output(Path(args.reference) / f"{n}.json", ids) for n, ids, _ in audits]
     report = {}
     for spec in args.candidate:
         name, path = spec.split("=", 1)
-        cand = _load(Path(path), doc_ids)
-        report[name] = {}
-        for exp, mask in (("scaled_whitebox_docmia", np.ones(len(doc_ids), bool)), ("low_evidence_subset", n_q <= 2)):
-            y = y_all[mask]
-            rng = np.random.default_rng(0)
-            idx_sets = [rng.integers(0, len(y), len(y)) for _ in range(args.reps)]
-            report[name][exp] = {}
-            for slot in SLOTS:
-                if slot not in cand or slot not in ref:
-                    continue
-                (pc, sc), (pr, sr) = [(a[0][mask], a[1][mask]) for a in (cand[slot], ref[slot])]
-                diffs = []
-                for idx in idx_sets:
-                    if y[idx].min() == y[idx].max():
-                        continue
-                    diffs.append(_stats(y[idx], pc[idx], sc[idx]) - _stats(y[idx], pr[idx], sr[idx]))
-                diffs = np.array(diffs)
-                point = _stats(y, pc, sc) - _stats(y, pr, sr)
-                report[name][exp][slot] = {
-                    m: {"diff": float(point[k]), "lo95": float(np.percentile(diffs[:, k], 2.5)),
-                        "hi95": float(np.percentile(diffs[:, k], 97.5)), "sd": float(diffs[:, k].std())}
-                    for k, m in enumerate(names)
-                }
+        try:
+            cand = [_load_output(Path(path) / f"{n}.json", ids) for n, ids, _ in audits]
+        except (FileNotFoundError, KeyError) as exc:
+            print(f"{name}: skipped ({exc})")
+            continue
+        point = np.mean([_stats(y, *c) - _stats(y, *r) for (_, _, y), c, r in zip(audits, cand, ref)], 0)
+        diffs = np.array([
+            np.mean([_stats(y[i], c[0][i], c[1][i]) - _stats(y[i], r[0][i], r[1][i])
+                     for (_, _, y), c, r, i in zip(audits, cand, ref, idx)], 0)
+            for idx in resamples
+        ])
+        report[name] = {m: {"diff": float(point[k]), "lo95": float(np.percentile(diffs[:, k], 2.5)),
+                            "hi95": float(np.percentile(diffs[:, k], 97.5)), "sd": float(diffs[:, k].std())}
+                        for k, m in enumerate(NAMES)}
+        cells = "  ".join(f"{m} {v['diff']:+.2f} [{v['lo95']:+.2f},{v['hi95']:+.2f}]" for m, v in report[name].items())
+        print(f"{name:26s} {cells}", flush=True)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(args.out).write_text(json.dumps(report, indent=1), encoding="utf-8")
-    for name, block in report.items():
-        for exp, slots in block.items():
-            for slot, ms in slots.items():
-                cells = "  ".join(f"{m} {v['diff']:+.2f} [{v['lo95']:+.2f},{v['hi95']:+.2f}]" for m, v in ms.items())
-                print(f"{name:24s} {exp:24s} {slot:14s} {cells}")
+    Path(args.out).write_text(json.dumps({"audits": [n for n, _, _ in audits], "reps": args.reps,
+                                          "comparisons": report}, indent=1), encoding="utf-8")
 
 
 if __name__ == "__main__":

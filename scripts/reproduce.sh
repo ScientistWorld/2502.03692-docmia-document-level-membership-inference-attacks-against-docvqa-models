@@ -1,5 +1,5 @@
 #!/bin/bash
-# Reproduce the reference end to end (CPU, ~1-2 h on one core):
+# Reproduce the reference end to end (CPU, ~1.5 h on one core):
 #   assets (committed; rebuilt only if missing) -> DocMIA tuning on the dev audit
 #   -> train-slice and hidden-test scoring -> validation.
 set -euo pipefail
@@ -8,6 +8,7 @@ cd "$ROOT"
 export PYTHONPATH="$ROOT:${PYTHONPATH:-}"
 export DOCMIA_THREADS=${DOCMIA_THREADS:-1}
 bash scripts/download.sh
+python eval/test/build_test_audit.py  # no-op: the hidden audits are committed
 if [ ! -f method/config.json ] || [ "${DOCMIA_RETUNE:-0}" = "1" ]; then
   python method/tune_dev.py --cache-dir tmp/tune_cache
 fi

@@ -1,20 +1,28 @@
 """Hidden-test scoring of document-level membership attacks.
 
-The hidden audit (``eval/test/audit``: a target fine-tuned on a private set
-drawn from a secret seed, plus 600 unlabeled candidate documents with neutral,
-shuffled ids) and its membership labels exist only in this directory.
+The hidden test holds several independent audits (``eval/test/audits/<name>``).
+Each is a target fine-tuned with the public recipe on its own private document
+set drawn from a secret seed, plus 600 member and 600 non-member candidate
+documents with neutral, shuffled ids.  Their labels exist only in
+``eval/test/audit_labels.json``.
 
 Run with no arguments (``bash scripts/evaluate_test.sh``):
 
-1. labels, candidates and target are loaded and checked against recorded hashes;
-2. the comparison baselines are computed here from the hidden target;
-3. ``bash scripts/attack.sh <copy_of_audit> <out.json>`` runs on a copy of the
-   audit (target checkpoint + unlabeled candidates only);
-4. every metric is recomputed from the raw per-document scores and decisions.
+1. every hidden file (targets, candidates, labels) is read once and checked
+   against ``eval/test/audit_sha256.json``; the labels are not kept in memory;
+2. the comparison baselines are computed here from each hidden target;
+3. ``eval/test`` and ``data/dev_audit`` are made unreadable.  For each audit in
+   turn, a fresh copy holding only that audit's target and unlabeled candidates
+   is written, ``bash scripts/attack.sh <copy> <out.json>`` runs on it, and the
+   copy is deleted;
+4. read access is restored, the labels are read (only now) and checked again,
+   and every metric is recomputed from the raw per-document scores and 0/1
+   decisions, per audit, then averaged over the audits.
 
-The three reference slots are always written.  A slot that is missing or
-invalid, or every slot when the attack program fails, gets the worst value of
-every metric.  Extra attacks in the output are scored as additional rows.
+The ranked ``membership_attack`` row is always written.  If the attack program
+fails on any audit, or its ``membership_attack`` entry is missing or invalid on
+any audit, the row gets the worst value (0) of every metric.  Extra named
+attacks are reported unranked.
 """
 
 from __future__ import annotations
@@ -26,10 +34,13 @@ for _var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
 
 import argparse
 import hashlib
+import io
 import json
 import math
 import shlex
 import shutil
+import signal
+import stat
 import subprocess
 import tempfile
 import traceback
@@ -44,20 +55,20 @@ from torch import nn
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-HIDDEN_AUDIT = HERE / "audit"
-HIDDEN_LABELS = HERE / "audit_labels.json"
-HIDDEN_HASHES = HERE / "audit_sha256.json"
+LABELS = HERE / "audit_labels.json"
+HASHES = HERE / "audit_sha256.json"
+SEALED_DIRS = (HERE, ROOT / "data" / "dev_audit")  # unreadable while the attack runs
 
-SLOTS = ("membership_attack",)  # the ranked submission; other attacks are reported unranked
+EXPERIMENT = "scaled_whitebox_docmia"
+SLOT = "membership_attack"  # the ranked submission; other attacks are reported unranked
 RESERVED = {"loss_ta", "score_ua", "score_ua_all", "scoreloss_ua_all", "gradient_ua"}
-EXPERIMENT_SPECS = (
-    ("scaled_whitebox_docmia", None, ("balanced_accuracy", "f1", "roc_auc", "tpr_at_1_fpr", "tpr_at_3_fpr")),
-)
+METRICS = ("balanced_accuracy", "f1", "roc_auc", "tpr_at_1_fpr", "tpr_at_3_fpr")
 LOW_EVIDENCE = 2  # diagnostic subset: candidates carrying at most this many QA pairs
+LOW_METRICS = ("balanced_accuracy", "f1", "roc_auc", "tpr_at_3_fpr", "member_recall")
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+def sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
 
 
 class HiddenTarget(nn.Module):
@@ -86,31 +97,58 @@ class HiddenTarget(nn.Module):
 
 
 class HiddenAudit:
-    def __init__(self, audit_dir: Path, labels_path: Path, hashes_path: Path | None) -> None:
-        if hashes_path is not None and hashes_path.exists():
-            expected = json.loads(hashes_path.read_text(encoding="utf-8"))
-            for rel, digest in expected.items():
-                if sha256(audit_dir / rel) != digest:
-                    raise RuntimeError(f"hidden audit file {rel} does not match its recorded hash")
-        manifest = json.loads((audit_dir / "candidates" / "manifest.json").read_text(encoding="utf-8"))
-        labels = json.loads(labels_path.read_text(encoding="utf-8"))
+    """One hidden audit, built from hash-verified bytes held in memory (no labels)."""
+
+    def __init__(self, name: str, files: dict[str, bytes]) -> None:
+        self.name, self.files = name, files
+        manifest = json.loads(files["candidates/manifest.json"].decode("utf-8"))
         self.doc_ids = [doc["doc_id"] for doc in manifest["documents"]]
-        self.y = np.array([int(labels[d]) for d in self.doc_ids], dtype=np.int64)
         field_pos = {f: i for i, f in enumerate(manifest["fields"])}
         answer_pos = {a: i for i, a in enumerate(manifest["answer_bank"])}
-        pages, self.pair_doc, q, a = [], [], [], []
+        pages, pair_doc, q, a = [], [], [], []
         for i, doc in enumerate(manifest["documents"]):
-            pages.append(np.asarray(Image.open(audit_dir / "candidates" / doc["image"]).convert("L"), np.float32) / 255.0)
+            image = Image.open(io.BytesIO(files[f"candidates/{doc['image']}"])).convert("L")
+            pages.append(np.asarray(image, np.float32) / 255.0)
             for qa in doc["qas"]:
-                self.pair_doc.append(i)
+                pair_doc.append(i)
                 q.append(field_pos[qa["field"]])
                 a.append(answer_pos[qa["answer"]])
-        self.pair_doc = np.array(self.pair_doc)
+        self.pair_doc = np.array(pair_doc)
         self.n_questions = np.bincount(self.pair_doc, minlength=len(self.doc_ids))
         self.pages = torch.from_numpy(np.stack(pages))[:, None]
         self.q, self.a = torch.tensor(q), torch.tensor(a)
-        state = torch.load(audit_dir / "target.pt", map_location="cpu", weights_only=False)["model_state"]
+        state = torch.load(io.BytesIO(files["target.pt"]), map_location="cpu", weights_only=False)["model_state"]
         self.target = HiddenTarget(state)
+
+
+def load_hidden(hashes_path: Path) -> tuple[list[HiddenAudit], dict]:
+    record = json.loads(hashes_path.read_text(encoding="utf-8"))
+    names, expected = record["audits"], record["files"]
+    audits = []
+    for name in names:
+        prefix = f"audits/{name}/"
+        files = {}
+        for rel, digest in expected.items():
+            if not rel.startswith(prefix):
+                continue
+            data = (HERE / rel).read_bytes()
+            if sha256(data) != digest:
+                raise RuntimeError(f"hidden file {rel} does not match its recorded hash")
+            files[rel[len(prefix):]] = data
+        if "target.pt" not in files or "candidates/manifest.json" not in files:
+            raise RuntimeError(f"hidden audit {name} is incomplete")
+        audits.append(HiddenAudit(name, files))
+    if sha256(LABELS.read_bytes()) != expected["audit_labels.json"]:
+        raise RuntimeError("hidden labels do not match their recorded hash")
+    return audits, expected
+
+
+def load_labels(audits: list[HiddenAudit], expected: dict) -> dict[str, np.ndarray]:
+    data = LABELS.read_bytes()
+    if sha256(data) != expected["audit_labels.json"]:
+        raise RuntimeError("hidden labels changed while the attack ran")
+    labels = json.loads(data.decode("utf-8"))
+    return {a.name: np.array([int(labels[a.name][d]) for d in a.doc_ids], dtype=np.int64) for a in audits}
 
 
 def aggregate_all(per_pair: np.ndarray, pair_doc: np.ndarray, n_docs: int) -> np.ndarray:
@@ -171,15 +209,19 @@ def score_rows(y: np.ndarray, decisions: np.ndarray, scores: np.ndarray, wanted)
     return {m: float(100.0 * table[m]) for m in wanted}
 
 
-def read_attack_output(path: Path, doc_ids: list[str]):
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    listed = raw.get("doc_ids")
+def mean_rows(rows: list[dict]) -> dict:
+    return {m: float(np.mean([r[m] for r in rows])) for m in rows[0]}
+
+
+def read_attack_output(raw: bytes, doc_ids: list[str]):
+    data = json.loads(raw.decode("utf-8"))
+    listed = data.get("doc_ids")
     if not (isinstance(listed, list) and len(listed) == len(doc_ids)
             and len(set(listed)) == len(listed) and set(listed) == set(doc_ids)):
         raise ValueError("doc_ids must contain each candidate document exactly once")
     where = {d: i for i, d in enumerate(listed)}
     perm = np.array([where[d] for d in doc_ids])
-    block = raw.get("attacks")
+    block = data.get("attacks")
     if not isinstance(block, dict):
         raise ValueError("'attacks' must map attack names to their outputs")
 
@@ -209,94 +251,172 @@ def read_attack_output(path: Path, doc_ids: list[str]):
     return usable, notes
 
 
-def run_attack_program(command: str, audit_dir: Path, timeout: float, keep_output: str | None) -> Path:
+class Seal:
+    """Make the hidden test's directories (and the dev audit) unreadable while the attack runs."""
+
+    def __init__(self, enabled: bool) -> None:
+        self.enabled = enabled
+        self.modes: dict[Path, int] = {}
+        self.effective: bool | None = None
+
+    def __enter__(self) -> "Seal":
+        if self.enabled:
+            try:
+                for path in SEALED_DIRS:
+                    if path.exists():
+                        self.modes[path] = stat.S_IMODE(path.stat().st_mode)
+                        os.chmod(path, 0)
+            except BaseException:
+                self.restore()
+                raise
+            # A process with DAC override (root) could still read; record whether the seal holds.
+            self.effective = not os.access(LABELS, os.R_OK)
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.restore()
+
+    def restore(self) -> None:
+        for path, mode in list(self.modes.items()):
+            try:
+                os.chmod(path, mode | stat.S_IRWXU)
+            except OSError:
+                pass
+            self.modes.pop(path, None)
+
+
+def run_attack(command: str, audit: HiddenAudit, timeout: float) -> bytes:
+    """Run the attack on a fresh copy of one audit; the copy is deleted afterwards."""
     scratch = Path(tempfile.mkdtemp(prefix="hidden_eval_", dir=str(ROOT / "tmp")))
-    target_dir = scratch / "audit"
-    shutil.copytree(audit_dir / "candidates", target_dir / "candidates")
-    shutil.copy2(audit_dir / "target.pt", target_dir / "target.pt")
-    result = scratch / "attack_output.json"
-    proc = subprocess.run(shlex.split(command) + [str(target_dir), str(result)], cwd=str(ROOT), timeout=timeout)
-    if proc.returncode != 0:
-        raise RuntimeError(f"attack program exited with code {proc.returncode}")
-    if not result.exists():
-        raise RuntimeError("attack program wrote no output")
-    if keep_output:
-        Path(keep_output).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(result, keep_output)
-    return result
+    try:
+        audit_dir = scratch / "audit"
+        for rel, data in audit.files.items():
+            path = audit_dir / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        result = scratch / "attack_output.json"
+        proc = subprocess.Popen(shlex.split(command) + [str(audit_dir), str(result)], cwd=str(ROOT),
+                                start_new_session=True)
+        try:
+            returncode = proc.wait(timeout=timeout)
+        finally:  # nothing the attack started may outlive it (and the seal)
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except OSError:
+                pass
+            proc.wait()
+        if returncode != 0:
+            raise RuntimeError(f"attack program exited with code {returncode}")
+        if not result.exists():
+            raise RuntimeError("attack program wrote no output")
+        return result.read_bytes()
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
+def worst_row() -> dict:
+    return {m: 0.0 for m in METRICS}
 
 
 def failed_payload(reason: str) -> dict:
-    return {"experiments": {
-        name: {"slice": "test", "results": {slot: {m: 0.0 for m in metrics} for slot in SLOTS},
-               "attack_status": {"failure": reason}}
-        for name, _, metrics in EXPERIMENT_SPECS
-    }}
+    return {"experiments": {EXPERIMENT: {"slice": "test", "results": {SLOT: worst_row()},
+                                         "attack_status": {"failure": reason}}}}
 
 
-def score(command: str, audit_dir: Path, labels_path: Path, hashes_path: Path | None,
-          timeout: float, keep_output: str | None) -> dict:
-    audit = HiddenAudit(audit_dir, labels_path, hashes_path)
-    reference_attacks = baseline_attacks(audit)
-    usable, notes, failure = {}, {}, None
-    try:
-        output = run_attack_program(command, audit_dir, timeout, keep_output)
-        usable, notes = read_attack_output(output, audit.doc_ids)
-        shutil.rmtree(output.parent, ignore_errors=True)
-    except Exception as exc:  # the attack program failed: every slot scores as failed
-        failure = f"{type(exc).__name__}: {exc}"
-    extra = sorted(set(usable) - set(SLOTS))
-    low = audit.n_questions <= LOW_EVIDENCE
-    low_metrics = ("balanced_accuracy", "f1", "roc_auc", "tpr_at_3_fpr", "member_recall")
-    payload = {"experiments": {}}
-    for name, max_q, metrics in EXPERIMENT_SPECS:
-        keep = np.ones(len(audit.y), bool) if max_q is None else audit.n_questions <= max_q
-        y = audit.y[keep]
-        results = {}
-        for row in SLOTS:
-            if row in usable:
-                decisions, scores = usable[row]
-                results[row] = score_rows(y, decisions[keep], scores[keep], metrics)
-            else:
-                results[row] = {m: 0.0 for m in metrics}
-        listed = {r: usable[r] for r in list(SLOTS) + extra if r in usable}
-        listed.update({f"baseline:{b}": v for b, v in reference_attacks.items()})
-        payload["experiments"][name] = {
-            "slice": "test",
-            "documents": int(keep.sum()),
+def score(command: str, timeout: float, seal_enabled: bool, keep_dir: str | None) -> dict:
+    audits, expected = load_hidden(HASHES)
+    baselines = {a.name: baseline_attacks(a) for a in audits}
+    outputs, status = {}, {}
+    with Seal(seal_enabled) as seal:
+        for audit in audits:
+            try:
+                outputs[audit.name] = run_attack(command, audit, timeout)
+                status[audit.name] = {"failure": None}
+            except Exception as exc:  # recorded; the ranked row then fails as a whole
+                status[audit.name] = {"failure": f"{type(exc).__name__}: {exc}"}
+            print(f"[hidden] {audit.name}: {status[audit.name]['failure'] or 'attack finished'}", flush=True)
+    labels = load_labels(audits, expected)
+    if keep_dir:
+        Path(keep_dir).mkdir(parents=True, exist_ok=True)
+        for name, raw in outputs.items():
+            (Path(keep_dir) / f"{name}.json").write_bytes(raw)
+
+    usable = {}
+    for audit in audits:
+        if audit.name in outputs:
+            try:
+                usable[audit.name], notes = read_attack_output(outputs[audit.name], audit.doc_ids)
+                status[audit.name]["slot"] = notes.get(SLOT, "missing: scored with worst values")
+                status[audit.name]["other"] = {k: v for k, v in notes.items() if k != SLOT}
+            except Exception as exc:
+                status[audit.name]["failure"] = f"invalid output: {type(exc).__name__}: {exc}"
+        if audit.name not in usable:
+            usable[audit.name] = {}
+    ranked_ok = all(SLOT in usable[a.name] for a in audits)
+    extra = sorted(set.intersection(*(set(usable[a.name]) for a in audits)) - {SLOT}) if audits else []
+
+    per_audit, low_rows = {}, {}
+    for audit in audits:
+        y, attacks = labels[audit.name], usable[audit.name]
+        low = audit.n_questions <= LOW_EVIDENCE
+        listed = {r: attacks[r] for r in [SLOT] + extra if r in attacks}
+        listed.update({f"baseline:{b}": v for b, v in baselines[audit.name].items()})
+        per_audit[audit.name] = {
+            "documents": len(y),
             "members": int(y.sum()),
-            "results": results,
-            "baselines": {b: score_rows(y, d[keep], s[keep], metrics) for b, (d, s) in reference_attacks.items()},
-            "other_attacks": {r: score_rows(y, usable[r][0][keep], usable[r][1][keep], metrics) for r in extra},
-            "diagnostics": {f"documents_with_at_most_{LOW_EVIDENCE}_questions": {
-                "documents": int(low.sum()),
-                "rows": {r: score_rows(audit.y[low], d[low], s_[low], low_metrics) for r, (d, s_) in listed.items()},
-            }},
-            "attack_status": {"failure": failure,
-                              "slots": {r: notes.get(r, "missing: scored with worst values") for r in SLOTS},
-                              "other": {k: v for k, v in notes.items() if k not in SLOTS}},
+            "results": {SLOT: score_rows(y, *attacks[SLOT], METRICS) if SLOT in attacks else worst_row()},
+            "baselines": {b: score_rows(y, d, s, METRICS) for b, (d, s) in baselines[audit.name].items()},
+            "other_attacks": {r: score_rows(y, *attacks[r], METRICS) for r in extra},
         }
-    return payload
+        low_rows[audit.name] = {r: score_rows(y[low], d[low], s[low], LOW_METRICS) for r, (d, s) in listed.items()}
+
+    names = [a.name for a in audits]
+    results = {SLOT: mean_rows([per_audit[n]["results"][SLOT] for n in names]) if ranked_ok else worst_row()}
+    seal_note = {"enabled": seal_enabled, "labels_unreadable_during_attack": seal.effective}
+    return {"experiments": {EXPERIMENT: {
+        "slice": "test",
+        "audits": len(audits),
+        "documents": int(sum(len(a.doc_ids) for a in audits)),
+        "members": int(sum(labels[n].sum() for n in names)),
+        "aggregation": "mean over the hidden audits of each audit's metric; worst values if any audit fails",
+        "results": results,
+        "baselines": {b: mean_rows([per_audit[n]["baselines"][b] for n in names]) for b in baselines[names[0]]},
+        "other_attacks": {r: mean_rows([per_audit[n]["other_attacks"][r] for n in names]) for r in extra},
+        "per_audit": per_audit,
+        "diagnostics": {f"documents_with_at_most_{LOW_EVIDENCE}_questions": {
+            "documents": int(sum((a.n_questions <= LOW_EVIDENCE).sum() for a in audits)),
+            "rows": {r: mean_rows([low_rows[n][r] for n in names]) for r in low_rows[names[0]]
+                     if all(r in low_rows[n] for n in names)},
+        }},
+        "attack_status": {"failure": None if ranked_ok else "membership_attack failed or invalid on at least one audit",
+                          "audits": status, "seal": seal_note},
+    }}}
+
+
+def _interrupt(signum, _frame):
+    raise SystemExit(f"evaluator interrupted by signal {signum}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--attack-cmd", default="bash scripts/attack.sh")
     parser.add_argument("--scores", default=str(ROOT / "scoring" / "scores_test.json"))
-    parser.add_argument("--audit-dir", default=str(HIDDEN_AUDIT))
-    parser.add_argument("--labels", default=str(HIDDEN_LABELS))
-    parser.add_argument("--hashes", default=str(HIDDEN_HASHES))
-    parser.add_argument("--keep-output", default=None)
-    parser.add_argument("--timeout", type=float, default=4 * 3600)
+    parser.add_argument("--keep-output", default=None, help="directory for the raw per-audit attack outputs")
+    parser.add_argument("--timeout", type=float, default=3600.0, help="seconds per audit")
+    parser.add_argument("--no-seal", action="store_true", help="diagnostics only: leave eval/test readable")
     args = parser.parse_args()
+    for sig in (signal.SIGTERM, signal.SIGHUP):
+        signal.signal(sig, _interrupt)  # unwinds through the seal, which restores access
+    for path in SEALED_DIRS:  # recover from a run that was killed while sealed
+        if path.exists() and not os.access(path, os.R_OK | os.X_OK):
+            os.chmod(path, stat.S_IMODE(path.stat().st_mode) | stat.S_IRWXU)
     cores = int(os.environ.get("DOCMIA_THREADS", "1") or 1)
     torch.set_num_threads(max(1, cores))
     (ROOT / "tmp").mkdir(exist_ok=True)
     out = Path(args.scores)
     out.unlink(missing_ok=True)
     try:
-        payload = score(args.attack_cmd, Path(args.audit_dir), Path(args.labels),
-                        Path(args.hashes) if args.hashes else None, args.timeout, args.keep_output)
+        payload = score(args.attack_cmd, args.timeout, not args.no_seal, args.keep_output)
     except Exception as exc:  # evaluator-side failure still yields worst-value rows
         traceback.print_exc()
         payload = failed_payload(f"{type(exc).__name__}: {exc}")

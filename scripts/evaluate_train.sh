@@ -8,4 +8,5 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 export PYTHONPATH="$ROOT:${PYTHONPATH:-}"
 export DOCMIA_THREADS=${DOCMIA_THREADS:-1}
+chmod u+rwx data/dev_audit 2>/dev/null || true  # in case a killed hidden-test run left it sealed
 python eval/train/evaluate.py ${DOCMIA_KEEP_OUTPUT:+--keep-output "$DOCMIA_KEEP_OUTPUT"}

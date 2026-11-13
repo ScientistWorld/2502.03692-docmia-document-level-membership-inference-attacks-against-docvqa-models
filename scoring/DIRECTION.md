@@ -29,7 +29,9 @@ Promising directions:
 
 - Changing the task from document-level to question-level membership.
 - Auxiliary documents, shadow models, or any model trained on documents to
-  imitate the target.
+  imitate the target; reference models other than the public checkpoint
+  (such as the dev audit's target or another audit's target).
+- Carrying information from one hidden audit's run to another.
 - Supervised attack classifiers trained on membership labels, beyond selecting
   a small number of hyper-parameters on the dev audit.
 - Beating the score by changing the target model, the candidate data, the

@@ -21,8 +21,10 @@ The experiment establishes two things:
   non-member (true positive rate at 1% and 3% false positive rate). This is
   the regime that matters for privacy auditing.
 
-The hidden test uses a different model and different documents from the
-visible development audit, built the same way. Only the submitted
+The hidden test uses four different models, each with its own documents,
+built the same way as the visible development audit. The score is the average
+over the four, so a result has to hold across independently trained models,
+not on one lucky model. Only the submitted
 `membership_attack` row is ranked. The evaluator computes the comparison
 baselines itself from the audited model, so they are fixed for every
 submission.

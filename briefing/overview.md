@@ -26,7 +26,8 @@ This is a scaled white-box reproduction:
   pre-trained checkpoint. Its member/non-member QA accuracy is ~97% vs ~60%,
   similar to the paper's DocVQA targets.
 - **Candidates:** 600 member and 600 non-member documents per audit.
-- **Test:** hidden.
+- **Test:** hidden. It has four independent audits, each with its own target,
+  and the metrics are averaged over them.
 
 ## Key Results (paper, Donut on DocVQA, white-box)
 

@@ -38,10 +38,12 @@ attack never sees:
 | `tpr_at_3_fpr` (largest TPR with FPR <= 3%) | scores | 1.0 |
 | `roc_auc` | scores | 0 (diagnostic) |
 
-All are percentages, higher is better. Only the `membership_attack` row of
-experiment `scaled_whitebox_docmia` is ranked. Other named attacks are scored
-and reported under `other_attacks`. Diagnostics on documents with at most two
-question-answer pairs are reported under `diagnostics`. Neither is ranked.
+All are percentages, higher is better. On the hidden test each metric is
+computed per audit and averaged over the audits. Only the `membership_attack`
+row of experiment `scaled_whitebox_docmia` is ranked. Other named attacks are
+scored and reported under `other_attacks`. Per-audit values are under
+`per_audit`. Diagnostics on documents with at most two question-answer pairs
+are reported under `diagnostics`. None of these is ranked.
 
 ## Failures
 
@@ -49,6 +51,7 @@ The `membership_attack` row is always written. If it is missing, or its scores
 are not finite, or its decisions are not exactly 0/1, or its ids do not cover
 every candidate exactly once, it gets the worst value (0) of every metric. A
 program that crashes, times out or writes nothing fails all rows the same way.
+On the hidden test, a failure on **any one** audit fails the whole row.
 Nothing else in the output (no metric, flag or threshold) is read.
 
 ## Baselines
@@ -65,15 +68,23 @@ They are reported under `baselines` and are identical for every submission:
 ## Slices
 
 - **Train (visible):** `bash scripts/evaluate_train.sh` runs the attack on the
-  dev audit `data/dev_audit` (600 members, 600 non-members). Its labels are in
-  `data/dev_audit/labels.json` for development. Output:
-  `scoring/scores_train.json`. `bash scripts/evaluate.sh` writes the same
-  scores to `scoring/scores.json`.
+  dev audit `data/dev_audit`, which has one target and 600 members plus 600
+  non-members. Its labels are in `data/dev_audit/labels.json` for development.
+  Output: `scoring/scores_train.json`. `bash scripts/evaluate.sh` writes the
+  same scores to `scoring/scores.json`.
 - **Test (hidden):** `bash scripts/evaluate_test.sh` (no arguments) runs the
-  same attack on a hidden audit. That audit has a different target, built with
-  the same recipe from a different private document set, and 1200 candidates
-  of the same composition. Output: `scoring/scores_test.json`. The hidden audit
-  and its labels exist only in the test environment.
+  same program once on each of four hidden audits. Each has its own target,
+  built with the dev recipe from its own private document set, and 1200
+  candidates of the dev composition. Output: `scoring/scores_test.json`. The
+  hidden audits and their labels exist only in the test environment.
 
-The test runs on one CPU core. The reference attack takes about a minute per
-audit, and the evaluator stops an attack after four hours.
+While the attack runs on the hidden test:
+
+- `eval/test/` and `data/dev_audit/` are unreadable. Anything the attack needs
+  from the dev audit, such as a selected threshold or hyper-parameter, must be
+  stored with the method beforehand.
+- Each run sees only the copy of its own audit. The copy is deleted when the
+  program returns, together with any process it started.
+
+The test runs on one CPU core. The reference attack takes about 40 seconds per
+audit. The evaluator stops an attack after one hour per audit.

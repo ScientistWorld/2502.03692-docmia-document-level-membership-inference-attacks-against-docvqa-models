@@ -1,30 +1,105 @@
 {
   "experiments": {
     "scaled_whitebox_docmia": {
-      "description": "White-box, auxiliary-data-free document-level membership inference against a document VQA model fine-tuned from a public pre-trained checkpoint, on 1200 hidden candidate documents (600 members, 600 non-members). The ranked row is the submitted attack (membership_attack). Paper reference: DocMIA white-box results against Donut on DocVQA (Tables 1, 11, 12, 16); the paper's FL variant is its best-average variant there.",
+      "description": "White-box, auxiliary-data-free document-level membership inference against document VQA models fine-tuned from a public pre-trained checkpoint. The hidden test has four independent audits, each with its own target and 1200 candidate documents (600 members, 600 non-members); every metric is averaged over the four. The ranked row is the submitted attack (membership_attack). Paper reference: DocMIA white-box results against Donut on DocVQA (Tables 1, 11, 12, 16); the paper's FL variant is its best-average variant there.",
       "weight": 1.0,
       "primary_metric": "f1",
-      "_scaling_note": "Scaled setting: procedural DocVQA-style forms (80x96 px, 5 fields, 1-5 questions per document) and a ~1.1M-parameter OCR-free reader pre-trained on a public generated corpus and fine-tuned for 8 epochs on 600 private documents (member/non-member QA accuracy ~97%/~60%, close to the paper's DocVQA train-test gaps), instead of DocVQA and the 201M-parameter Donut. The paper's numbers below are the published reference; the gym ranks submissions against its own reproduced reference run (scoring/scores_test.json). The paper attacks up to 10 questions per document; here each document's 1-5 questions are available.",
+      "_scaling_note": "Scaled setting: procedural DocVQA-style forms (80x96 px, 5 fields, 1-5 questions per document) and a ~1.1M-parameter OCR-free reader pre-trained on a public generated corpus and fine-tuned for 8 epochs on 600 private documents per target (four hidden targets, one dev target) (member/non-member QA accuracy ~97%/~60%, close to the paper's DocVQA train-test gaps), instead of DocVQA and the 201M-parameter Donut. The paper's numbers below are the published reference; the gym ranks submissions against its own reproduced reference run (scoring/scores_test.json). The paper attacks up to 10 questions per document; here each document's 1-5 questions are available.",
       "_paper_variants": {
-        "docmia_fl": {"balanced_accuracy": 80.33, "f1": 82.18, "tpr_at_1_fpr": 3.33, "tpr_at_3_fpr": 10.67},
-        "docmia_fllora": {"balanced_accuracy": 80.0, "f1": 81.93, "tpr_at_1_fpr": 2.67, "tpr_at_3_fpr": 5.33},
-        "docmia_ig": {"balanced_accuracy": 80.33, "f1": 82.34, "tpr_at_1_fpr": 1.33, "tpr_at_3_fpr": 8.0},
-        "_table18_member_recall_at_most_2_questions": {"docmia_fl": 80.18, "docmia_ig": 63.06, "_note": "Table 18, Donut/DocVQA, member documents with m=1 (51) and m=2 (60) training questions, pooled."}
+        "docmia_fl": {
+          "balanced_accuracy": 80.33,
+          "f1": 82.18,
+          "tpr_at_1_fpr": 3.33,
+          "tpr_at_3_fpr": 10.67
+        },
+        "docmia_fllora": {
+          "balanced_accuracy": 80.0,
+          "f1": 81.93,
+          "tpr_at_1_fpr": 2.67,
+          "tpr_at_3_fpr": 5.33
+        },
+        "docmia_ig": {
+          "balanced_accuracy": 80.33,
+          "f1": 82.34,
+          "tpr_at_1_fpr": 1.33,
+          "tpr_at_3_fpr": 8.0
+        },
+        "_table18_member_recall_at_most_2_questions": {
+          "docmia_fl": 80.18,
+          "docmia_ig": 63.06,
+          "_note": "Table 18, Donut/DocVQA, member documents with m=1 (51) and m=2 (60) training questions, pooled."
+        }
       },
       "metrics": {
-        "balanced_accuracy": {"higher_is_better": true, "coefficient": 1.0, "description": "Balanced accuracy of the attack's member/non-member decisions (the paper's ACC)."},
-        "f1": {"higher_is_better": true, "coefficient": 1.0, "description": "F1 of the member class from the attack's decisions (the paper's headline metric)."},
-        "tpr_at_1_fpr": {"higher_is_better": true, "coefficient": 0.4, "description": "True positive rate at <=1% false positive rate from the attack's membership scores (paper Tables 12, 16)."},
-        "tpr_at_3_fpr": {"higher_is_better": true, "coefficient": 1.0, "description": "True positive rate at <=3% false positive rate from the attack's membership scores (paper Tables 2 and 4, main text)."},
-        "roc_auc": {"higher_is_better": true, "coefficient": 0.0, "description": "Diagnostic only: threshold-free ranking quality of the membership scores (not reported by the paper)."}
+        "balanced_accuracy": {
+          "higher_is_better": true,
+          "coefficient": 1.0,
+          "description": "Balanced accuracy of the attack's member/non-member decisions (the paper's ACC)."
+        },
+        "f1": {
+          "higher_is_better": true,
+          "coefficient": 1.0,
+          "description": "F1 of the member class from the attack's decisions (the paper's headline metric)."
+        },
+        "tpr_at_1_fpr": {
+          "higher_is_better": true,
+          "coefficient": 0.4,
+          "description": "True positive rate at <=1% false positive rate from the attack's membership scores (paper Tables 12, 16)."
+        },
+        "tpr_at_3_fpr": {
+          "higher_is_better": true,
+          "coefficient": 1.0,
+          "description": "True positive rate at <=3% false positive rate from the attack's membership scores (paper Tables 2 and 4, main text)."
+        },
+        "roc_auc": {
+          "higher_is_better": true,
+          "coefficient": 0.0,
+          "description": "Diagnostic only: threshold-free ranking quality of the membership scores (not reported by the paper)."
+        }
       },
       "results": {
-        "membership_attack": {"type": "proposed", "balanced_accuracy": 80.33, "f1": 82.18, "tpr_at_1_fpr": 3.33, "tpr_at_3_fpr": 10.67},
-        "loss_ta": {"type": "baseline", "balanced_accuracy": 51.83, "f1": 53.46, "tpr_at_1_fpr": 0.67, "tpr_at_3_fpr": 7.67},
-        "score_ua": {"type": "baseline", "balanced_accuracy": 75.97, "f1": 79.57, "tpr_at_1_fpr": 4.33, "tpr_at_3_fpr": 15.67},
-        "score_ua_all": {"type": "baseline", "balanced_accuracy": 80.5, "f1": 81.1, "tpr_at_1_fpr": 5.0, "tpr_at_3_fpr": 11.0},
-        "scoreloss_ua_all": {"type": "baseline", "balanced_accuracy": 80.5, "f1": 81.1, "tpr_at_1_fpr": 2.67, "tpr_at_3_fpr": 8.67},
-        "gradient_ua": {"type": "baseline", "balanced_accuracy": 77.17, "f1": 75.92, "tpr_at_1_fpr": 3.67, "tpr_at_3_fpr": 6.0}
+        "membership_attack": {
+          "type": "proposed",
+          "balanced_accuracy": 80.33,
+          "f1": 82.18,
+          "tpr_at_1_fpr": 3.33,
+          "tpr_at_3_fpr": 10.67
+        },
+        "loss_ta": {
+          "type": "baseline",
+          "balanced_accuracy": 51.83,
+          "f1": 53.46,
+          "tpr_at_1_fpr": 0.67,
+          "tpr_at_3_fpr": 7.67
+        },
+        "score_ua": {
+          "type": "baseline",
+          "balanced_accuracy": 75.97,
+          "f1": 79.57,
+          "tpr_at_1_fpr": 4.33,
+          "tpr_at_3_fpr": 15.67
+        },
+        "score_ua_all": {
+          "type": "baseline",
+          "balanced_accuracy": 80.5,
+          "f1": 81.1,
+          "tpr_at_1_fpr": 5.0,
+          "tpr_at_3_fpr": 11.0
+        },
+        "scoreloss_ua_all": {
+          "type": "baseline",
+          "balanced_accuracy": 80.5,
+          "f1": 81.1,
+          "tpr_at_1_fpr": 2.67,
+          "tpr_at_3_fpr": 8.67
+        },
+        "gradient_ua": {
+          "type": "baseline",
+          "balanced_accuracy": 77.17,
+          "f1": 75.92,
+          "tpr_at_1_fpr": 3.67,
+          "tpr_at_3_fpr": 6.0
+        }
       }
     }
   }

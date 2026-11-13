@@ -1,8 +1,8 @@
 # Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends.
-action: pending
+action: submit
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: ""
+notes: "Hardening job: build 4 hidden audits (new secret seed), smoke-check the sealed hidden test, retune DocMIA on dev, score reference on train/test, replay variants and shortcuts (incl. shadow LiRA, dev-target and cross-audit reference models), paired bootstrap, rank, validate. Resumable."
